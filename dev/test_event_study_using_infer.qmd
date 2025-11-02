@@ -107,29 +107,40 @@ pwalk(
 
 ## Process for all event dates
 ```{r}
-reps=1000
+library(furrr)
+
+# Set up parallel processing
+plan(multisession, workers = availableCores() - 1)
+
+reps <- 1000
 ai_events |> 
-    select(event_date=date) |> 
+    select(event_date = date) |> 
     crossing(dt) |> 
     pivot_longer(
-        cols=!all_of(c("event_date","idx","date")), 
-        names_to = "data_name") |> 
+        cols = !all_of(c("event_date", "idx", "date")), 
+        names_to = "data_name"
+    ) |> 
     group_by(event_date, data_name) |> 
     group_nest() |> 
     mutate(
         event_data = map2(data, event_date, ~ prep_event_study_data(.x, event_date = .y, 15, 15)),
-        d_hat = map(event_data, ~ specify(.x, value ~ period) |>
-            calculate(stat = "diff in medians", order = c("before","after"))),
+        d_hat = future_map(event_data, ~ specify(.x, value ~ period) |>
+            calculate(stat = "diff in medians", order = c("before", "after")),
+            .options = furrr_options(seed = TRUE))
     ) |> 
-    unnest(d_hat) |> rename(d_hat = stat) |> 
+    unnest(d_hat) |> 
+    rename(d_hat = stat) |> 
     mutate(
-        null_dist = map(event_data, ~ specify(.x, value ~ period) |> 
-            hypothesize(null="independence") |> 
-            generate(rep=reps, type="permute") |> 
-            calculate(stat="diff in medians", order = c("before","after"))),
-        p_value = map2(null_dist, d_hat, ~ get_p_value(.x, obs_stat=.y, direction="both"))
+        null_dist = future_map(event_data, ~ specify(.x, value ~ period) |> 
+            hypothesize(null = "independence") |> 
+            generate(rep = reps, type = "permute") |> 
+            calculate(stat = "diff in medians", order = c("before", "after")),
+            .options = furrr_options(seed = TRUE)),
+        p_value = map2(null_dist, d_hat, ~ get_p_value(.x, obs_stat = .y, direction = "both"))
     ) |> 
     unnest(p_value) -> result
 
+# Reset to sequential processing when done
+plan(sequential)
 ```
 

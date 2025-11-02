@@ -1,0 +1,446 @@
+---
+title: "Data Preparation"
+author: "Your Name"
+date: today
+format: html
+editor: visual
+execute:
+  warning: false
+  echo: false
+---
+
+```{r}
+source(here::here("_common.R"))
+```
+
+## Data Preparation
+
+### Data Processing
+
+#### Load raw data
+
+#### `bond_yields` sampled rows
+
+```{r}
+bond_yields <- read_csv(here("data/raw/bond_yields_raw.csv"), show_col_types = FALSE)
+kable(bond_yields |> slice_sample(n=10))
+```
+
+#### `ai_events` sampled rows
+
+```{r}
+ai_events <- read_csv(here("data/raw/ai_events_raw.csv"), show_col_types = FALSE) %>%
+    mutate(
+        date = as.Date(date), 
+        year=as.integer(year)
+    )
+
+kable(ai_events |> slice_sample(n=10))
+```
+
+cat("Loaded", nrow(bond_yields), "bond yield observations\n") cat("Loaded", nrow(ai_events), "AI event dates\n")
+
+#### `actual_event_long_window` sampled rows 
+```{r}
+actual_event_long_window <- read_csv(here("data/processed/actual_event_long_window.csv"), show_col_types = FALSE) 
+kable(actual_event_long_window |> slice_sample(n=10))
+```
+
+## Placebo Permutated Inference
+
+Global: `dt` dataframe
+Input: `events` dataframe
+Output: 31 rows per symbol of median price changes
+
+
+### Prepare Globals
+
+#### Trading Dates
+
+```{r}
+trading_dates = bond_yields |> 
+    filter(symbol=="DGS10") |> 
+    # If DGS10 exists, it's a trading day
+    filter(!is.na(price)) |> 
+    select(date)
+
+trading_dates |> slice_sample(n=10) |> kable()
+```
+
+
+
+### Build Event Windows
+
+Steps:
+
+1.  Create dataframe of trading dates from the yields table based on `DGS10` data
+2.  As the dates will not be sequential, assign a row id as a sequence
+3.  Select the trading dates from the yields table
+4.  Impute missing data
+5.  For each AI event date create a dataframe of yields prices from -15 days to +15 days after event date
+
+#### Trading Dates
+
+```{r}
+trading_dates = bond_yields |> 
+    filter(symbol=="DGS10") |> 
+    # If DGS10 exists, it's a trading day
+    filter(!is.na(price)) |> 
+    select(date)
+
+trading_dates |> slice_sample(n=10) |> kable()
+```
+
+#### Assign Row ID
+
+```{r}
+trading_dates = trading_dates |>  
+    arrange(date) |> 
+    rowid_to_column(var="trading_day_index")
+
+trading_dates |> slice_sample(n=10) |> kable()
+```
+
+#### Yields data for trading dates
+
+```{r}
+yields = bond_yields |> 
+    inner_join(trading_dates)
+
+yields |> slice_sample(n=10) |> kable()
+
+```
+
+#### Impute missing data
+
+```{r}
+yields_clean <- yields |> 
+    group_by(symbol) |> 
+    fill(price, .direction = "down")
+```
+
+```{r}
+yields_clean |> 
+    group_by(symbol) |> 
+    summarise(
+        na_count = sum(is.na(price))
+    ) |> kable()
+```
+
+#### Final
+
+```{r}
+dt = yields_clean
+dt |> slice_sample(n=4) |> kable()
+```
+
+### Placebo Event Dates Replicates
+
+#### Candidate Placebo Event Dates
+
+```{r}
+placebo_dates = trading_dates  |> 
+    anti_join(actual_event_long_window) 
+```
+
+```{r}
+num_events = nrow(ai_events)
+replicates = tibble(rep_id = seq(1,5000)) |> 
+    mutate(
+        event_dates = map(rep_id, ~ placebo_dates |> slice_sample(n=num_events))
+    )
+```
+#### AI Event Dates Event Study Windows
+
+```{r}
+
+process_one_events_set <- function(events, window_length) {
+
+    # Guard: ensure window_length is at least 1
+    if (window_length < 1) {
+        stop("window_length must be >= 1")
+    }  
+
+    # Guard: ensure events has required columns
+    required_cols <- c("event_id", "event_date", "event_date_index")
+    missing_cols <- setdiff(required_cols, names(events))
+    
+    if (length(missing_cols) > 0) {
+        stop("events dataframe is missing required columns: ", 
+             paste(missing_cols, collapse = ", "))
+    }
+
+    initial_price_window = events |> 
+        mutate(initial_index = event_date_index - window_length) |> 
+        inner_join(dt, by=join_by(initial_index == trading_day_index)) |> 
+        select(event_id, event_date, symbol, initial_price=price)
+
+    dt_window_index = events |> 
+        mutate(
+            window_start = event_date_index - window_length,
+            window_end = event_date_index + window_length
+        ) |> 
+        inner_join(dt, by=join_by(between(y$trading_day_index,x$window_start,x$window_end))) |> 
+        mutate(
+            period = case_when(
+                trading_day_index == event_date_index ~ "event",
+                between(trading_day_index, event_date_index - window_length, event_date_index -1) ~ "before", 
+                between(trading_day_index, event_date_index +1, event_date_index + window_length) ~ "after"
+            ),
+            window_index = trading_day_index - event_date_index
+        ) |> 
+        select(-window_start, -window_end)
+
+    dt_price_change = dt_window_index |> 
+        inner_join(initial_price_window) |> 
+        mutate( price_change = price - initial_price)
+
+    window_plot_data = dt_price_change |> 
+        group_by(symbol, window_index) |> 
+        summarize(
+            median_price_change = median(price_change)
+        )
+    return(window_plot_data)
+}
+```
+
+```{r}
+library(furrr)
+
+# Set up parallel processing
+plan(multisession, workers = availableCores() - 1)  # Leave one core free
+
+# Parallel version of your code
+rep_data <- replicates |> 
+    mutate(
+        placebo_events = future_map(event_dates, \(df) {
+            df |> 
+                arrange(date) |> 
+                rowid_to_column(var="event_id") |> 
+                inner_join(trading_dates) |> 
+                select(event_id, event_date = date, event_date_index = trading_day_index)
+        }, 
+            .options = furrr_options(seed = TRUE),
+            .progress = TRUE
+        ),
+        plot_data = future_map(placebo_events, \(df) {
+            process_one_events_set(df, 15)
+        }, 
+            .options = furrr_options(seed = TRUE),
+            .progress = TRUE
+        )
+    )
+
+# Clean up when done
+plan(sequential)
+```
+
+```{r}
+placebo_data = rep_data |> 
+    pull(plot_data) |> 
+    list_rbind(names_to = "rep_id")
+```
+
+`data` now has 5000 replicates of each symbol, window_index
+
+```{r}
+placebo_data |> group_by(symbol, window_index) |> count()
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Define colors (three shades of gray, solid black for median)
+metric_colors <- c(
+  "median"     = "black",
+  "p90_lower"  = "#bbbbbb",
+  "p90_upper"  = "#bbbbbb",
+  "p95_lower"  = "#888888",
+  "p95_upper"  = "#888888",
+  "p99_lower"  = "#444444",
+  "p99_upper"  = "#444444",
+  "median_price_change" = "red"
+)
+
+# Define line types: solid for median, dashed for bands
+metric_linetypes <- c(
+  "median"     = "solid",
+  "p90_lower"  = "dashed",
+  "p90_upper"  = "dashed",
+  "p95_lower"  = "dashed",
+  "p95_upper"  = "dashed",
+  "p99_lower"  = "dashed",
+  "p99_upper"  = "dashed",
+  "median_price_change" = "solid"
+)
+```
+
+```{r}
+placebo_symbol_index = placebo_data |> 
+    group_by(symbol, window_index) |> 
+    summarize(
+        p99_upper = quantile(median_price_change, 0.995, na.rm=TRUE),
+        p95_upper = quantile(median_price_change, 0.975, na.rm=TRUE),
+        p90_upper = quantile(median_price_change, 0.950, na.rm=TRUE),
+        median = median(median_price_change),
+        p90_lower = quantile(median_price_change, 0.050, na.rm=TRUE),
+        p95_lower = quantile(median_price_change, 0.025, na.rm=TRUE),
+        p99_lower = quantile(median_price_change, 0.005, na.rm=TRUE),
+        n = n()
+    )
+```
+
+```{r}
+actual_data = read_csv(here("data/processed/actual_event_long_window.csv"))
+
+actual_symbol_index = actual_data |> 
+    group_by(symbol, window_index) |> 
+    summarize(
+        median_price_change = median(price_change)
+    )
+```
+
+```{r}
+plot_data = placebo_symbol_index |> 
+    inner_join(actual_symbol_index)
+```
+```{r}
+plot_data |> 
+    pivot_longer(
+        cols = c(p99_upper, p95_upper, p90_upper, median, p90_lower, p95_lower, p99_lower, median_price_change),
+        names_to = "metric",
+        values_to = "value"        
+    ) |> 
+    mutate(
+        value_bps = value*100
+    ) |> 
+    ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +
+    geom_line(size = 1.2) +
+    scale_color_manual(values = metric_colors) +
+    scale_linetype_manual(values = metric_linetypes) +
+    facet_wrap(~ symbol) +
+    labs(
+        title = "Percentile Bands and Median",
+        x = "Window Index",
+        y = "Value (bps)",
+        color = "Metric",
+        linetype = "Metric"
+    ) +
+    theme_minimal()
+```
+
+```{r}
+
+df %>%
+  pivot_longer(
+    cols = c(median, p90_lower, p90_upper, p95_lower, p95_upper, p99_lower, p99_upper),
+    names_to = "metric",
+    values_to = "value"
+  ) %>%
+  ggplot(aes(x = window_index, y = value, color = metric, linetype = metric, group = metric)) +
+  geom_line(size = 1.2) +
+  scale_color_manual(values = metric_colors) +
+  scale_linetype_manual(values = metric_linetypes) +
+  facet_wrap(~ symbol) +
+  labs(
+    title = "Percentile Bands and Median",
+    x = "Window Index",
+    y = "Value (bps)",
+    color = "Metric",
+    linetype = "Metric"
+  ) +
+  theme_minimal()
+
+```
+
+```{r}
+library(ggplot2)
+
+rep_data |> 
+    pull(plot_data) |> 
+    list_rbind(names_to = "rep_id")  |> 
+    filter(str_detect(symbol, "[123]0$")) |> 
+    ggplot(aes(x = window_index, y = median_price_change, color = symbol)) +
+    # geom_line() +
+    geom_smooth() +
+    # geom_smooth(xintercept = 0, linetype = "dashed", color = "black") +
+    labs(
+        title = "Bond Yields Around AI Events",
+        subtitle = "15-day window before and after event dates for 10, 20, 30 Year Maturity",
+        x = "Days Relative to Event",
+        y = "Yield (%)",
+        color = "Security"
+    ) +
+    theme_minimal() +
+    facet_wrap(~ symbol)
+```
+
+#### Short Window -5 to +5 days
+
+Dataframe of `initial price` at the beginning of each event window across each `events` and `symbol`
+
+```{r}
+initial_price_short_window = events |> 
+    mutate(initial_index = event_date_index -5) |> 
+    inner_join(dt, by=join_by(initial_index == trading_day_index)) |> 
+    select(event_id, event_date, symbol, initial_price=price)
+```
+
+Construct the event window For each `symbol` and `event_id`: 1. period before, event, after 2. normalized window_index
+
+```{r}
+dt_short_window_index = events |> 
+    mutate(
+        window_start = event_date_index - 5,
+        window_end = event_date_index + 5
+    ) |> 
+    inner_join(dt, by=join_by(between(y$trading_day_index,x$window_start,x$window_end))) |> 
+    mutate(
+        period = case_when(
+            trading_day_index == event_date_index ~ "event",
+            between(trading_day_index, event_date_index - 5, event_date_index -1) ~ "before", 
+            between(trading_day_index, event_date_index +1, event_date_index +5) ~ "after"
+        ),
+        window_index = trading_day_index - event_date_index
+    ) |> 
+    select(-window_start, -window_end)
+
+```
+
+```{r}
+dt_short_price_change = dt_short_window_index |> 
+    inner_join(initial_price_short_window) |> 
+    mutate( price_change = price - initial_price)
+
+```
+
+```{r}
+short_window_plot_data = dt_short_price_change |> 
+    group_by(symbol, window_index) |> 
+    summarize(
+        median_price_change = median(price_change)
+    )
+```
+
+```{r}
+library(ggplot2)
+
+short_window_plot_data |> 
+    filter(str_detect(symbol, "[123]0$")) |> 
+    ggplot(aes(x = window_index, y = median_price_change, color = symbol)) +
+    geom_line() +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
+    labs(
+        title = "Bond Yields Around AI Events",
+        subtitle = "5-day window before and after event dates for 10, 20, 30 Year Maturity",
+        x = "Days Relative to Event",
+        y = "Yield (%)",
+        color = "Security"
+    ) +
+    theme_minimal() 
+```
+
+## Write Data
+

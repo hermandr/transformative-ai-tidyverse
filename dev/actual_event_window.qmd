@@ -1,0 +1,274 @@
+---
+title: "Data Preparation"
+author: "Your Name"
+date: today
+format: html
+editor: visual
+execute:
+  warning: false
+  echo: false
+---
+
+```{r}
+source(here::here("_common.R"))
+```
+
+## Data Preparation
+
+### Data Processing
+
+#### Load raw data
+
+#### `bond_yields` sampled rows
+
+```{r}
+bond_yields <- read_csv(here("data/raw/bond_yields_raw.csv"), show_col_types = FALSE)
+kable(bond_yields |> slice_sample(n=10))
+```
+
+#### `ai_events` sampled rows
+
+```{r}
+ai_events <- read_csv(here("data/raw/ai_events_raw.csv"), show_col_types = FALSE) %>%
+  mutate(date = as.Date(date))
+kable(ai_events |> slice_sample(n=10))
+```
+
+cat("Loaded", nrow(bond_yields), "bond yield observations\n") cat("Loaded", nrow(ai_events), "AI event dates\n")
+
+### Build Event Windows
+
+Steps:
+
+1.  Create dataframe of trading dates from the yields table based on `DGS10` data
+2.  As the dates will not be sequential, assign a row id as a sequence
+3.  Select the trading dates from the yields table
+4.  Impute missing data
+5.  For each AI event date create a dataframe of yields prices from -15 days to +15 days after event date
+
+#### Trading Dates
+
+```{r}
+trading_dates = bond_yields |> 
+    filter(symbol=="DGS10") |> 
+    # If DGS10 exists, it's a trading day
+    filter(!is.na(price)) |> 
+    select(date)
+
+trading_dates |> slice_sample(n=10) |> kable()
+```
+
+#### Assign Row ID
+
+```{r}
+trading_dates = trading_dates |>  
+    arrange(date) |> 
+    rowid_to_column(var="trading_day_index")
+
+trading_dates |> slice_sample(n=10) |> kable()
+```
+
+#### Yields data for trading dates
+
+```{r}
+yields = bond_yields |> 
+    inner_join(trading_dates)
+
+yields |> slice_sample(n=10) |> kable()
+
+```
+
+#### Impute missing data
+
+```{r}
+yields_clean <- yields |> 
+    group_by(symbol) |> 
+    fill(price, .direction = "down")
+```
+
+```{r}
+yields_clean |> 
+    group_by(symbol) |> 
+    summarise(
+        na_count = sum(is.na(price))
+    ) |> kable()
+```
+
+#### Final
+
+```{r}
+dt = yields_clean
+dt |> slice_sample(n=4) |> kable()
+```
+
+#### AI Event Dates Event Study Windows
+
+Assign `event_id` as there are identical dates
+
+```{r}
+events = ai_events |> 
+    mutate(
+        year = as.integer(year)
+    ) |> 
+    arrange(date, company) |> 
+    rowid_to_column(var="event_id") |> 
+    inner_join(trading_dates) |> 
+    select(event_id, event_date = date, event_date_index = trading_day_index)
+```
+
+#### Long Window -15 to +15 days
+
+Dataframe of `initial price` at the beginning of each event window across each `events` and `symbol`
+
+```{r}
+initial_price_long_window = events |> 
+    mutate(initial_index = event_date_index -15) |> 
+    inner_join(dt, by=join_by(initial_index == trading_day_index)) |> 
+    select(event_id, event_date, symbol, initial_price=price)
+```
+
+Construct the event window For each `symbol` and `event_id`: 1. period before, event, after 2. normalized window_index
+
+```{r}
+dt_long_window_index = events |> 
+    mutate(
+        window_start = event_date_index - 15,
+        window_end = event_date_index + 15
+    ) |> 
+    inner_join(dt, by=join_by(between(y$trading_day_index,x$window_start,x$window_end))) |> 
+    mutate(
+        period = case_when(
+            trading_day_index == event_date_index ~ "event",
+            between(trading_day_index, event_date_index - 15, event_date_index -1) ~ "before", 
+            between(trading_day_index, event_date_index +1, event_date_index +15) ~ "after"
+        ),
+        window_index = trading_day_index - event_date_index
+    ) |> 
+    select(-window_start, -window_end)
+
+```
+
+```{r}
+dt_long_price_change = dt_long_window_index |> 
+    inner_join(initial_price_long_window) |> 
+    mutate( price_change = price - initial_price)
+
+```
+
+```{r}
+long_window_plot_data = dt_long_price_change |> 
+    group_by(symbol, window_index) |> 
+    summarize(
+        median_price_change = median(price_change)
+    )
+```
+
+Replicating Figure 1
+
+```{r}
+library(ggplot2)
+library(stringr)
+library(dplyr)
+
+custom_colors <- c(
+  "DGS1"  = "#00BFC4",  # Cyan-blue
+  "DGS5"  = "#F8766D",  # Orange-red
+  "DGS10" = "#7CAE00",  # Green
+  "DGS20" = "#C77CFF",  # Purple
+  "DGS30" = "#FF61C3"   # Magenta
+)
+
+```
+```{r}
+
+long_window_plot_data %>%
+  mutate(
+    median_price_change_bps = median_price_change * 100
+  ) %>%
+  filter(str_detect(symbol, "^DGS")) %>%
+  ggplot(aes(
+    x = window_index,
+    y = median_price_change_bps,
+    color = symbol
+  )) +
+  geom_line(size=1.5, alpha=0.8) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  scale_color_manual(values = custom_colors, name = "Series") +
+  labs(
+    title = "Median change across events",
+    x = "Relative time in days (0 = event day)",
+    y = "Basis points (bp)"
+  ) +
+  theme_minimal()
+
+```
+#### Short Window -5 to +5 days
+
+Dataframe of `initial price` at the beginning of each event window across each `events` and `symbol`
+
+```{r}
+initial_price_short_window = events |> 
+    mutate(initial_index = event_date_index -5) |> 
+    inner_join(dt, by=join_by(initial_index == trading_day_index)) |> 
+    select(event_id, event_date, symbol, initial_price=price)
+```
+
+Construct the event window For each `symbol` and `event_id`: 1. period before, event, after 2. normalized window_index
+
+```{r}
+dt_short_window_index = events |> 
+    mutate(
+        window_start = event_date_index - 5,
+        window_end = event_date_index + 5
+    ) |> 
+    inner_join(dt, by=join_by(between(y$trading_day_index,x$window_start,x$window_end))) |> 
+    mutate(
+        period = case_when(
+            trading_day_index == event_date_index ~ "event",
+            between(trading_day_index, event_date_index - 5, event_date_index -1) ~ "before", 
+            between(trading_day_index, event_date_index +1, event_date_index +5) ~ "after"
+        ),
+        window_index = trading_day_index - event_date_index
+    ) |> 
+    select(-window_start, -window_end)
+
+```
+
+```{r}
+dt_short_price_change = dt_short_window_index |> 
+    inner_join(initial_price_short_window) |> 
+    mutate( price_change = price - initial_price)
+
+```
+
+```{r}
+short_window_plot_data = dt_short_price_change |> 
+    group_by(symbol, window_index) |> 
+    summarize(
+        median_price_change = median(price_change)
+    )
+```
+
+```{r}
+library(ggplot2)
+
+short_window_plot_data |> 
+    mutate(median_price_change_bps = median_price_change * 100) |>
+    filter(str_detect(symbol, "^DGS")) |> 
+    ggplot(aes(x = window_index, y = median_price_change_bps, color = symbol)) +
+    geom_line() +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+    labs(
+        title = "Bond Yields Around AI Events",
+        subtitle = "5-day window before and after event dates for 10, 20, 30 Year Maturity",
+        x = "Days Relative to Event",
+        y = "Yield (%)",
+        color = "Security"
+    ) +
+    theme_minimal() 
+```
+
+```{r}
+write_csv(dt_long_price_change, here("data/processed/actual_event_long_window.csv"))
+write_csv(dt_short_price_change, here("data/processed/actual_event_short_window.csv"))
+```

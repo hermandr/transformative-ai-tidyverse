@@ -1,0 +1,166 @@
+---
+title: "Data Retrieval"
+author: "Your Name"
+date: today
+format: html
+editor: visual
+execute:
+  warning: false
+  echo: false
+---
+
+```{r}
+source(here::here("_common.R"))
+library(tidyquant)
+```
+
+## AI Events
+
+```{r}
+# AI event dates from Table 1 in paper
+ai_events_2023 <- tribble(
+  ~date, ~company, ~model, ~notes,
+  "2023-02-06", "Google", "Bard", "First major Google AI release",
+  "2023-03-14", "OpenAI", "ChatGPT-4", "Major GPT-4 release",
+  "2023-03-14", "Anthropic", "Claude 1", "Same day as GPT-4",
+  "2023-07-11", "Anthropic", "Claude 2", "Improved Claude model",
+  "2023-11-03", "xAI", "Grok 1", "Elon Musk's AI company",
+  "2023-11-21", "Anthropic", "Claude 2.1", "Minor update",
+  "2023-12-06", "Google", "Gemini Pro 1.0", "Google's flagship model"
+)
+
+ai_events_2024 <- tribble(
+  ~date, ~company, ~model, ~notes,
+  "2024-02-15", "Google", "Gemini Pro 1.5", "Improved Gemini",
+  "2024-03-04", "Anthropic", "Claude 3", "Major Claude update",
+  "2024-03-28", "xAI", "Grok 1.5", "Improved Grok model",
+  "2024-05-06", "DeepSeek", "DeepSeek V2", "Chinese AI company",
+  "2024-05-13", "OpenAI", "ChatGPT-4o", "Multimodal GPT-4",
+  "2024-06-20", "Anthropic", "Claude 3.5 Sonnet", "Advanced Claude",
+  "2024-08-13", "xAI", "Grok 2", "Major Grok update",
+  "2024-09-05", "DeepSeek", "DeepSeek 2.5", "Improved DeepSeek",
+  "2024-12-05", "OpenAI", "o1", "Reasoning model",
+  "2024-12-11", "Google", "Gemini 2.0", "Latest Gemini",
+  "2024-12-26", "DeepSeek", "DeepSeek V3", "Latest DeepSeek"
+)
+
+# Combine all AI events
+ai_events <- bind_rows(
+  ai_events_2023 %>% mutate(year = 2023),
+  ai_events_2024 %>% mutate(year = 2024)
+) %>%
+  mutate(date = as.Date(date))
+
+kable(ai_events)
+```
+
+```{r}
+write_csv(ai_events, here("data/raw/ai_events_raw.csv"))
+cat("\nRaw data saved to: data/raw/ai_events_raw.csv\n")
+```
+
+## Fetch bond yield data from FRED using tidyquant
+
+### Data Retrieval From FRED
+
+#### Define date range
+
+```{r}
+start_date <- "2023-01-01"
+end_date <- "2025-01-31"
+```
+
+Start Date: `r start_date` End Date: `r end_date`
+
+#### Treasury and TIPS symbols from FRED
+
+```{r}
+kable(METADATA)
+```
+
+#### Retrieve bond yield data from FRED
+
+```{r}
+bond_data <- tq_get(
+  METADATA$data_name,
+  get = "economic.data",
+  from = start_date,
+  to = end_date
+)
+
+kable(bond_data |> slice_sample(n=20))
+```
+
+### Check data quality
+
+```{r}
+
+cat("Data retrieval summary:\n")
+cat("- Total observations:", nrow(bond_data), "\n")
+cat("- Date range:", min(bond_data$date, na.rm = TRUE), "to", max(bond_data$date, na.rm = TRUE), "\n")
+cat("- Symbols retrieved:", length(unique(bond_data$symbol)), "\n")
+
+```
+
+#### Check for missing values by symbol
+
+```{r}
+missing_summary <- bond_data %>%
+  group_by(symbol) %>%
+  summarise(
+    total_obs = n(),
+    missing_obs = sum(is.na(price)),
+    missing_pct = round(100 * missing_obs / total_obs, 2),
+    .groups = "drop"
+  )
+
+kable(missing_summary)
+
+```
+
+### Save raw data
+
+```{r}
+write_csv(bond_data, here("data/raw/bond_yields_raw.csv"))
+cat("\nRaw data saved to: data/raw/bond_yields_raw.csv\n")
+
+```
+
+### Create summary statistics
+
+```{r}
+
+data_summary <- bond_data %>%
+  group_by(symbol) %>%
+  summarise(
+    start_date = min(date, na.rm = TRUE),
+    end_date = max(date, na.rm = TRUE),
+    min_yield = min(price, na.rm = TRUE),
+    max_yield = max(price, na.rm = TRUE),
+    mean_yield = mean(price, na.rm = TRUE),
+    median_yield = median(price, na.rm = TRUE),
+    count_na = sum(is.na(price)),
+    .groups = "drop"
+  )
+
+kable(data_summary)
+```
+
+#### Save summary data
+
+```{r}
+
+write_csv(data_summary, here("data/raw/bond_yields_summary.csv"))
+cat("Summary statistics saved to: data/raw/bond_yields_summary.csv\n")
+
+```
+
+## Note about corporate bonds
+
+Note: Corporate bond data (ICE BofA indices) not included in this script.
+
+Corporate bonds may require manual download or alternative data source.
+
+See paper Section 3.2 for details on corporate bond data requirements.
+
+Data retrieval completed successfully!
