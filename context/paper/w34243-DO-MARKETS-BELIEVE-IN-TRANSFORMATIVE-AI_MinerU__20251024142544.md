@@ -185,49 +185,29 @@ We use AI model releases as our event dates in order to capture new, forward-loo
 
 Table 1: AI Model Release Dates
 
-+---------------+---------------+-------------------+
+|               |               |                   |
+|---------------|---------------|-------------------|
 | Date          | AI Laboratory | Model             |
-+---------------+---------------+-------------------+
 | 2023 Releases |               |                   |
-+---------------+---------------+-------------------+
 | 02/06/2023    | Google        | Bard              |
-+---------------+---------------+-------------------+
 | 03/14/2023    | OpenAI        | ChatGPT 4         |
-+---------------+---------------+-------------------+
 | 03/14/2023    | Anthropic     | Claude 1          |
-+---------------+---------------+-------------------+
 | 07/11/2023    | Anthropic     | Claude 2          |
-+---------------+---------------+-------------------+
 | 11/03/2023    | xAI           | Grok 1            |
-+---------------+---------------+-------------------+
 | 11/21/2023    | Anthropic     | Claude 2.1        |
-+---------------+---------------+-------------------+
 | 12/06/2023    | Google        | Gemini Pro 1.0    |
-+---------------+---------------+-------------------+
 | 2024 Releases |               |                   |
-+---------------+---------------+-------------------+
 | 02/15/2024    | Google        | Gemini Pro 1.5    |
-+---------------+---------------+-------------------+
 | 03/04/2024    | Anthropic     | Claude 3          |
-+---------------+---------------+-------------------+
 | 03/28/2024    | xAI           | Grok 1.5          |
-+---------------+---------------+-------------------+
 | 05/06/2024    | DeepSeek      | DeepSeek V2       |
-+---------------+---------------+-------------------+
 | 05/13/2024    | OpenAI        | ChatGPT 4-o       |
-+---------------+---------------+-------------------+
 | 06/20/2024    | Anthropic     | Claude 3.5 Sonnet |
-+---------------+---------------+-------------------+
 | 08/13/2024    | xAI           | Grok 2            |
-+---------------+---------------+-------------------+
 | 09/05/2024    | DeepSeek      | DeepSeek 2.5      |
-+---------------+---------------+-------------------+
 | 12/05/2024    | OpenAI        | o1                |
-+---------------+---------------+-------------------+
 | 12/11/2024    | Google        | Gemini 2.0        |
-+---------------+---------------+-------------------+
 | 12/26/2024    | DeepSeek      | DeepSeek V3       |
-+---------------+---------------+-------------------+
 
 Notes: This table presents the major AI model releases used in our event study analysis.
 
@@ -279,21 +259,15 @@ Our procedure works as follows:
 
 Table 2: Two-sided p-values based on constant-maturity US Treasury yields
 
-+----------+---------------+------------------------+
+|          |               |                        |
+|----------|---------------|------------------------|
 |          | Median Change | Median Absolute Change |
-+----------+---------------+------------------------+
 | Maturity | ±5 days       | ±15 days               |
-+----------+---------------+------------------------+
 | 1 Year   | 0.369         | 0.231                  |
-+----------+---------------+------------------------+
 | 5 Year   | 0.189         | 0.231                  |
-+----------+---------------+------------------------+
 | 10 Year  | 0.120         | 0.150                  |
-+----------+---------------+------------------------+
 | 20 Year  | 0.097\*       | 0.054\*                |
-+----------+---------------+------------------------+
 | 30 Year  | 0.064\*       | 0.038\*\*              |
-+----------+---------------+------------------------+
 
 Notes: The "Median Change" columns consider the median change in yields across event dates, while the "Median Absolute Change" columns consider median absolute changes. For each statistic, we compare yields 5 or 15 days before and after each model release (in $\pm 5$ the $\pm 15$ columns, respectively). P-values are computed based on drawing placebo event dates 5000 times (uniformly at random from days in the sample with sufficient window on either side) and comparing resulting placebo distributions to observed changes around AI model releases. \*\* (\*) denotes statistical significance at the $5\%$ ( $10\%$ ) level.
 
@@ -309,19 +283,14 @@ unlikely to arise under the null (in our case, if AI model releases have no effe
 
 Table 3: Two-sided p-values based on constant-maturity TIPS yields
 
-+----------+---------------+------------------------+
+|          |               |                        |
+|----------|---------------|------------------------|
 |          | Median Change | Median Absolute Change |
-+----------+---------------+------------------------+
 | Maturity | ±5 days       | ±15 days               |
-+----------+---------------+------------------------+
 | 5 Year   | 0.341         | 0.128                  |
-+----------+---------------+------------------------+
 | 10 Year  | 0.182         | 0.107                  |
-+----------+---------------+------------------------+
 | 20 Year  | 0.114         | 0.096\*                |
-+----------+---------------+------------------------+
 | 30 Year  | 0.112         | 0.038\*\*              |
-+----------+---------------+------------------------+
 
 Notes: The "Median Change" columns consider the median change in yields across event dates, while the "Median Absolute Change" columns consider median absolute changes. For each statistic, we compare yields 5 or 15 days before and after each model release (in $\pm 5$ the $\pm 15$ columns, respectively). P-values are computed based on drawing placebo event dates 5000 times (uniformly at random from days in the sample with sufficient window on either side) and comparing resulting placebo distributions to observed changes around AI model releases. \*\* (\*) denotes statistical significance at the $5\%$ ( $10\%$ ) level.
 
@@ -331,23 +300,16 @@ This pattern is different than we, at least, anticipated before analyzing the da
 
 Table 4: Two-sided p-values based on ICE corporate bond index yields
 
-+------------+---------------+------------------------+
+|            |               |                        |
+|------------|---------------|------------------------|
 |            | Median Change | Median Absolute Change |
-+------------+---------------+------------------------+
 | Maturity   | ±5 days       | ±15 days               |
-+------------+---------------+------------------------+
 | 1-3 Year   | 0.531         | 0.086\*                |
-+------------+---------------+------------------------+
 | 3-5 Year   | 0.029\*\*     | 0.037\*\*              |
-+------------+---------------+------------------------+
 | 5-7 Year   | 0.036\*\*     | 0.036\*\*              |
-+------------+---------------+------------------------+
 | 7-10 Year  | 0.055\*       | 0.040\*\*              |
-+------------+---------------+------------------------+
 | 10-15 Year | 0.049\*\*     | 0.046\*\*              |
-+------------+---------------+------------------------+
 | 15+ Year   | 0.100\*       | 0.051\*                |
-+------------+---------------+------------------------+
 
 Notes: The "Median Change" columns consider the mean change in yields across event dates, while the "Median Absolute Change" columns consider median absolute changes. For each statistic, we compare yields 5 or 15 days before and after each model release (in $\pm 5$ the $\pm 15$ columns, respectively). P-values are computed based on drawing placebo event dates 5000 times (uniformly at random from days in the sample with sufficient window on either side) and comparing resulting placebo distributions to observed changes around AI model releases. $^{**} (*)$ denotes statistical significance at the $5\%$ ( $10\%$ ) level.
 
@@ -362,21 +324,21 @@ Median change across events
 
 ![](https://cdn-mineru.openxlab.org.cn/result/2025-10-24/200df4f6-5e44-4374-8f30-e3288b220f8f/ba69176142a69081dce75a00d4d2a0b969fc5fc0792f4a749ca84f4b3bc7e961.jpg)\
 Median absolute change across events\
-Figure 2: Median and median absolute change in yields (relative to fifteen days before event) for constant-maturity US Treasury Bonds. Median taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomutes statistics on dates drawn uniformly at random from sample period.
+Figure 2: Median and median absolute change in yields (relative to fifteen days before event) for constant-maturity US Treasury Bonds. Median taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomputes statistics on dates drawn uniformly at random from sample period.
 
 ![](https://cdn-mineru.openxlab.org.cn/result/2025-10-24/200df4f6-5e44-4374-8f30-e3288b220f8f/00de5494a562532a773816563a9fc9f305fbb986e471f3de3e1339f7b79e9a69.jpg)\
 Median change across events
 
 ![](https://cdn-mineru.openxlab.org.cn/result/2025-10-24/200df4f6-5e44-4374-8f30-e3288b220f8f/f08d856e1c55f00272ff09461f14b25b1ad2035e5855c9f2a9f9222f15883e46.jpg)\
 Median absolute change across events\
-Figure 3: Median and median absolute change in yields (relative to fifteen days before event) for constant-maturity inflation-protected US Treasury Bonds (TIPS). Median taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomutes statistics on dates drawn uniformly at random from sample period.
+Figure 3: Median and median absolute change in yields (relative to fifteen days before event) for constant-maturity inflation-protected US Treasury Bonds (TIPS). Median taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomputes statistics on dates drawn uniformly at random from sample period.
 
 ![](https://cdn-mineru.openxlab.org.cn/result/2025-10-24/200df4f6-5e44-4374-8f30-e3288b220f8f/82a6a80aeb67b3e0b6ae937e0a97c96db07e46078a03aadc3f8856730b87d9cd.jpg)\
 Median change across events
 
 ![](https://cdn-mineru.openxlab.org.cn/result/2025-10-24/200df4f6-5e44-4374-8f30-e3288b220f8f/4edbb854b7d75f5c8734b346e154cfd0d82f4cfc18d4e5377f0b652d0c5c5e9b.jpg)\
 Median absolute change across events\
-Figure 4: Median and median absolute change in yields (relative to fifteen days before event) for corporate bond indices. Median taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomutes statistics on dates drawn uniformly at random from sample period.
+Figure 4: Median and median absolute change in yields (relative to fifteen days before event) for corporate bond indices. Median taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomputes statistics on dates drawn uniformly at random from sample period.
 
 is limited (and largely statistically insignificant) departure from the placebo distribution between $t - 15$ and $t - 5$ . Bond yields, especially for longer-maturity bonds, show declines starting between $t - 5$ and $t - 2$ . These declines continue through at least $t = 0$ , and lower yields persist through $t + 15$ . The apparent anticipatory effects (i.e. effects before the model release date $t$ ) are consistent with the fact, discussed above, that some information about new models may become available to market participants prior to the official model release.
 
@@ -389,7 +351,7 @@ To answer this question, Figure 5 plots the event study for the ICE BofA Option-
 Exchange Rates Given our findings on bond yields, one might wonder whether AI model releases are leading to international capital flows. To provide some evidence on this point, in Appendix A we plot the event study for a broad trade-weighted US dollar exchange rate index around our model release dates (Board of Governors of the Federal Reserve System, US, 2025d). We find that AI model releases are associated with a statistically significant depreciation of the dollar, which starts a few days before the model release and persists through 15 days after. These declines are more gradual than the bond yield changes we find above, but appear consistent with e.g. a depreciation of the dollar following a drop in interest rates.
 
 ![](https://cdn-mineru.openxlab.org.cn/result/2025-10-24/200df4f6-5e44-4374-8f30-e3288b220f8f/cb01582af61ee8a3d87186459a9fb2dbfc233e2d2902759c4fa46f6f3ac5fe8d.jpg)\
-Figure 5: Median change in option-adjusted spreads (relative to fifteen days before event) for corporate bond indices. Median taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomutes statistics on dates drawn uniformly at random from sample period.
+Figure 5: Median change in option-adjusted spreads (relative to fifteen days before event) for corporate bond indices. Median taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomputes statistics on dates drawn uniformly at random from sample period.
 
 # 4.1 Robustness Checks
 
@@ -591,7 +553,7 @@ Weakly General AI - Median change in predictions
 
 ![](https://cdn-mineru.openxlab.org.cn/result/2025-10-24/200df4f6-5e44-4374-8f30-e3288b220f8f/7417bb11a22d105f6417097aff86723e03e8cb806ec4c81117a352081c5bc2bf.jpg)\
 Artificial General Intelligence - Median change in predictions\
-Figure 7: Median change in forecast distribution quantiles for weak AGI arrival date (top panel) and AGI arrival date (bottom panel). Median taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomutes statistics on dates drawn uniformly at random from dates in US Treasury data series.
+Figure 7: Median change in forecast distribution quantiles for weak AGI arrival date (top panel) and AGI arrival date (bottom panel). Median taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomputes statistics on dates drawn uniformly at random from dates in US Treasury data series.
 
 revenue, and thus lowers Treasury yields by lowering the embedded risk premium rather than by changing growth expectations.
 
@@ -658,7 +620,7 @@ Wolfers, Justin and Eric Zitzewitz, "Prediction markets," Journal of economic pe
 Figure 8 shows an event study for a broad trade-weighted US dollar index from FRED (Board of Governors of the Federal Reserve System, US, 2025d). As this plot shows, on median the model releases in our sample saw a weakening of the dollar, consistent with lower demand for the dollar following the fall in interest rates estimated in the main text. These declines are significant relative to the placebo distribution, and again persist through 15 days after the model release.
 
 ![](https://cdn-mineru.openxlab.org.cn/result/2025-10-24/200df4f6-5e44-4374-8f30-e3288b220f8f/ce8eb47ef8bf5c8d957ca265ddf53bb733e696339aac2f959b96bdebb8a1f7f0.jpg)\
-Figure 8: Median change in trade-weighted US Dollar index (relative to fifteen days before event). Median taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomutes statistics on dates drawn uniformly at random from sample period.
+Figure 8: Median change in trade-weighted US Dollar index (relative to fifteen days before event). Median taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomputes statistics on dates drawn uniformly at random from sample period.
 
 # B Robustness Checks
 
@@ -673,50 +635,34 @@ Drop-2 Robustness: Median change across events
 
 ![](https://cdn-mineru.openxlab.org.cn/result/2025-10-24/200df4f6-5e44-4374-8f30-e3288b220f8f/0f4474f75d6183950c623a04ef572c33b808f6634191ec64507eb57300c9f0e7.jpg)\
 105 drop-2 series (green lines); Full sample (blue line); Placebo bands: $99\%$ , $95\%$ , $90\%$ (grey dashed); Dark grey = placebo mean\
-Figure 9: Median change in yields (relative to fifteen days before event) for US treasuries. Blue line takes median across AI release events in the 2023 and 2024 calendar years, while green lines correspond to alternative series obtained by dropping one (in top panel) or two (in bottom panel) event dates from series. Placebo distribution recomutes statistics on dates drawn uniformly at random from sample period.
+Figure 9: Median change in yields (relative to fifteen days before event) for US treasuries. Blue line takes median across AI release events in the 2023 and 2024 calendar years, while green lines correspond to alternative series obtained by dropping one (in top panel) or two (in bottom panel) event dates from series. Placebo distribution recomputes statistics on dates drawn uniformly at random from sample period.
 
 ![](https://cdn-mineru.openxlab.org.cn/result/2025-10-24/200df4f6-5e44-4374-8f30-e3288b220f8f/2b5eb9c1de5fd184318b883580c40544bbd58b3b00eb7e41c0ecd8eddb8c0b54.jpg)\
 Drop-3 Robustness: Median change across events\
 455 drop-3 series (green lines); Full sample (blue line); Placebo bands: $99\%$ , $95\%$ , $90\%$ (grey dashed); Dark grey = placebo mean\
-Figure 10: Median change in yields (relative to fifteen days before event) for US treasuries. Blue line takes median across AI release events in the 2023 and 2024 calendar years, while green lines correspond to alternative series obtained by dropping three event dates from series. Placebo distribution recomutes statistics on dates drawn uniformly at random from sample period.
+Figure 10: Median change in yields (relative to fifteen days before event) for US treasuries. Blue line takes median across AI release events in the 2023 and 2024 calendar years, while green lines correspond to alternative series obtained by dropping three event dates from series. Placebo distribution recomputes statistics on dates drawn uniformly at random from sample period.
 
 Table 5: Major Tech Conference Dates
 
-+------------------+-----------+--------------------------------+
+|                  |           |                                |
+|------------------|-----------|--------------------------------|
 | Date             | Company   | Conference                     |
-+------------------+-----------+--------------------------------+
 | 2023 Conferences |           |                                |
-+------------------+-----------+--------------------------------+
 | 3/1/2023         | Tesla     | Tesla AI Day                   |
-+------------------+-----------+--------------------------------+
 | 3/23/2023        | Nvidia    | Nvidia GTC                     |
-+------------------+-----------+--------------------------------+
 | 5/10/2023        | Google    | Google I/O                     |
-+------------------+-----------+--------------------------------+
 | 5/25/2023        | Microsoft | Microsoft Build                |
-+------------------+-----------+--------------------------------+
 | 6/9/2023         | Apple     | Worldwide Developer Conference |
-+------------------+-----------+--------------------------------+
 | 9/28/2023        | Meta      | Meta Connect                   |
-+------------------+-----------+--------------------------------+
 | 12/1/2023        | Amazon    | AWS re:Invent                  |
-+------------------+-----------+--------------------------------+
 | 2024 Conferences |           |                                |
-+------------------+-----------+--------------------------------+
 | 3/21/2024        | Nvidia    | Nvidia GTC                     |
-+------------------+-----------+--------------------------------+
 | 4/22/2024        | Tesla     | Tesla AI Day                   |
-+------------------+-----------+--------------------------------+
 | 5/14/2024        | Google    | Google I/O                     |
-+------------------+-----------+--------------------------------+
 | 5/23/2024        | Microsoft | Microsoft Build                |
-+------------------+-----------+--------------------------------+
 | 6/14/2024        | Apple     | Worldwide Developer Conference |
-+------------------+-----------+--------------------------------+
 | 9/26/2024        | Meta      | Meta Connect                   |
-+------------------+-----------+--------------------------------+
 | 12/6/2024        | Amazon    | AWS re:Invent                  |
-+------------------+-----------+--------------------------------+
 
 Notes: This table presents the major annual tech conferences from the "Magnificent Seven" companies used in our event study analysis. For multi-day conferences, we use the final day.
 
@@ -768,40 +714,30 @@ Median change across events - Residualized (Surprise)
 
 ![](https://cdn-mineru.openxlab.org.cn/result/2025-10-24/200df4f6-5e44-4374-8f30-e3288b220f8f/318dc15b88147ec58293a53665ced6f1e87414f6db64e752911833de5b0d37d2.jpg)\
 Median change across events - Residualized (VIX)\
-Figure 15: Median change in yields (relative to fifteen days before event) for US Treasuries, residualized against Citigroup US Economic Surprise Index (in first panel) and VIX option-implied volatility index (in second panel). Median taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomutes statistics on dates drawn uniformly at random from sample period.
+Figure 15: Median change in yields (relative to fifteen days before event) for US Treasuries, residualized against Citigroup US Economic Surprise Index (in first panel) and VIX option-implied volatility index (in second panel). Median taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomputes statistics on dates drawn uniformly at random from sample period.
 
 ![](https://cdn-mineru.openxlab.org.cn/result/2025-10-24/200df4f6-5e44-4374-8f30-e3288b220f8f/a12a7f125da24df908082bb94f0d360a7a98116dd1827d3359e350159276eb9c.jpg)\
 Median change across events - Residualized (News Sentiment)
 
 ![](https://cdn-mineru.openxlab.org.cn/result/2025-10-24/200df4f6-5e44-4374-8f30-e3288b220f8f/9a0bbbe1c4003dfd3c7eecbd6f15b58f86287f59c0ff9c0fd45d5a35ab00feb9.jpg)\
 Median change across events - Residualized (Surprise + VIX + News Sentiment)\
-Figure 16: Median change in yields (relative to fifteen days before event) for US Treasuries, residualized against Federal Reserve Bank of San Francisco Daily News Sentiment Index (in first panel) and all three control series (in second panel). Median taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomutes statistics on dates drawn uniformly at random from sample period.
+Figure 16: Median change in yields (relative to fifteen days before event) for US Treasuries, residualized against Federal Reserve Bank of San Francisco Daily News Sentiment Index (in first panel) and all three control series (in second panel). Median taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomputes statistics on dates drawn uniformly at random from sample period.
 
 Table 6: AI Model Release Dates
 
-+---------------+---------------+-------------+
+|               |               |             |
+|---------------|---------------|-------------|
 | Date          | AI Laboratory | Model       |
-+---------------+---------------+-------------+
 | 2022 Releases |               |             |
-+---------------+---------------+-------------+
 | 11/30/2022    | OpenAI        | ChatGPT 3.5 |
-+---------------+---------------+-------------+
 | 2025 Releases |               |             |
-+---------------+---------------+-------------+
 | 01/20/2025    | DeepSeek      | DeepSeek R1 |
-+---------------+---------------+-------------+
 | 02/19/2025    | xAI           | Grok 3      |
-+---------------+---------------+-------------+
 | 02/24/2025    | Anthropic     | Claude 3.7  |
-+---------------+---------------+-------------+
 | 02/28/2025    | OpenAI        | ChatGPT 4.5 |
-+---------------+---------------+-------------+
 | 03/25/2025    | Google        | Gemini 2.5  |
-+---------------+---------------+-------------+
 | 04/16/2025    | OpenAI        | o3          |
-+---------------+---------------+-------------+
 | 05/22/2025    | Anthropic     | Claude 4    |
-+---------------+---------------+-------------+
 
 Notes: This table presents the additional AI model releases used in our extended event study analysis, covering from October 2022 through May 2025.
 
@@ -821,7 +757,7 @@ Median change across events\
 Figure 17: Median change in yields (relative to fifteen days before event) US Treasuries. Top panel takes median across six AI model release dates in 2023, while bottom panel takes median across nine model release dates in 2024. Placebo distribution in each panel recomputes statistics on dates drawn uniformly at random from the same year.
 
 ![](https://cdn-mineru.openxlab.org.cn/result/2025-10-24/200df4f6-5e44-4374-8f30-e3288b220f8f/67423dff3a467366998cb98ed4d464ed44657d8816231c11cf10760eff40462e.jpg)\
-Figure 18: Median change in yields (relative to fifteen days before event) US Treasuries. Median taken across AI release events from October 2022 through May 2025. Placebo distribution recomutes statistics on dates drawn uniformly at random from sample period.
+Figure 18: Median change in yields (relative to fifteen days before event) US Treasuries. Median taken across AI release events from October 2022 through May 2025. Placebo distribution recomputes statistics on dates drawn uniformly at random from sample period.
 
 # B.5 Means vs. Medians
 
@@ -844,21 +780,21 @@ Mean change across events
 
 ![](https://cdn-mineru.openxlab.org.cn/result/2025-10-24/200df4f6-5e44-4374-8f30-e3288b220f8f/4cf64fcd6d1b19a87ad04611b077d92fcb3b1abe1070d3d337d43aa3b4970df4.jpg)\
 Mean absolute change across events\
-Figure 19: Mean and mean absolute change in yields (relative to fifteen days before event) for constant-maturity US Treasury Bonds. Mean taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomutes statistics on dates drawn uniformly at random from sample period.
+Figure 19: Mean and mean absolute change in yields (relative to fifteen days before event) for constant-maturity US Treasury Bonds. Mean taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomputes statistics on dates drawn uniformly at random from sample period.
 
 ![](https://cdn-mineru.openxlab.org.cn/result/2025-10-24/200df4f6-5e44-4374-8f30-e3288b220f8f/458dfdc73e0a6fb8d38359b1438d69733f715526bb3f4882d50afebfcc81d63d.jpg)\
 Mean change across events
 
 ![](https://cdn-mineru.openxlab.org.cn/result/2025-10-24/200df4f6-5e44-4374-8f30-e3288b220f8f/0b22a164d655e694428d538911da1479ed248ec5e381d8868c9fa5282c75ef25.jpg)\
 Mean absolute change across events\
-Figure 20: Mean and mean absolute change in yields (relative to fifteen days before event) for constant-maturity TIPS. Mean taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomutes statistics on dates drawn uniformly at random from sample period.
+Figure 20: Mean and mean absolute change in yields (relative to fifteen days before event) for constant-maturity TIPS. Mean taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomputes statistics on dates drawn uniformly at random from sample period.
 
 ![](https://cdn-mineru.openxlab.org.cn/result/2025-10-24/200df4f6-5e44-4374-8f30-e3288b220f8f/7d7e15a6ddc2e01eecb4360c826d15a24d5cea729ba2c290cae7898572e39ddb.jpg)\
 Mean change across events
 
 ![](https://cdn-mineru.openxlab.org.cn/result/2025-10-24/200df4f6-5e44-4374-8f30-e3288b220f8f/1a4d86b724a9aca93bd661df71c9d0bc3e3eda8ceef8cfa3fd51a927ddbb3304.jpg)\
 Mean absolute change across events\
-Figure 21: Mean and mean absolute change in yields (relative to fifteen days before event) for corporate bond indices. Mean taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomutes statistics on dates drawn uniformly at random from sample period.
+Figure 21: Mean and mean absolute change in yields (relative to fifteen days before event) for corporate bond indices. Mean taken across AI release events in the 2023 and 2024 calendar years. Placebo distribution recomputes statistics on dates drawn uniformly at random from sample period.
 
 # C Additional Results For Section 5
 

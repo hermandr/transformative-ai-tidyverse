@@ -49,30 +49,9 @@ EVENT_WINDOWS <- list(
   long = list(b = 15, s_range = -15:15)
 )
 
-# FRED symbols for bond yields
-TREASURY_SYMBOLS <- c("DGS1", "DGS5", "DGS10", "DGS20", "DGS30")
-TIPS_SYMBOLS <- c("DFII5", "DFII10", "DFII20", "DFII30")
-METADATA <- tibble(
-  data_name=c(TREASURY_SYMBOLS, TIPS_SYMBOLS),
-  description=c(
-    "Market Yield on U.S. Treasury Securities at 1-Year Constant Maturity, Quoted on an Investment Basis (Nominal)",
-    "Market Yield on U.S. Treasury Securities at 5-Year Constant Maturity, Quoted on an Investment Basis (Nominal)",
-    "Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity, Quoted on an Investment Basis (Nominal)",
-    "Market Yield on U.S. Treasury Securities at 20-Year Constant Maturity, Quoted on an Investment Basis (Nominal)",
-    "Market Yield on U.S. Treasury Securities at 30-Year Constant Maturity, Quoted on an Investment Basis (Nominal)",
-    "Market Yield on U.S. Treasury Securities at 5-Year Constant Maturity, Quoted on an Investment Basis, Inflation-Indexed (TIPS yield)",
-    "Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity, Quoted on an Investment Basis, Inflation-Indexed (TIPS yield)",
-    "Market Yield on U.S. Treasury Securities at 20-Year Constant Maturity, Quoted on an Investment Basis, Inflation-Indexed (TIPS yield)",
-    "Market Yield on U.S. Treasury Securities at 30-Year Constant Maturity, Quoted on an Investment Basis, Inflation-Indexed (TIPS yield)"
-  ),
-  data_group = c(rep("Treasury Yield",5), rep("TIPS Yield",4))
-)
-
 # Print project info
 cat("Transformative AI Replication Project\n")
 cat("=====================================\n")
 cat("Start Date:", as.character(PROJECT_START_DATE), "\n")
 cat("End Date:", as.character(PROJECT_END_DATE), "\n")
 cat("Permutations:", N_PERMUTATIONS, "\n")
-cat("Symbols:")
-kable(METADATA)

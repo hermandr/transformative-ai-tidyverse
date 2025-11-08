@@ -1,0 +1,70 @@
+
+```{r}
+events = ai_events |> arrange(date) |> rowid_to_column(var = "event_id")
+
+bond_yields |> 
+    filter(symbol == "DGS1") |> 
+    mutate(
+        start_date = date - days(25), 
+        end_date = date + days(25)
+        ) |> 
+    inner_join(events, by = join_by(between(y$date, x$start_date, x$end_date))) |> 
+    group_by(event_id) |> 
+    mutate( date_seq = row_number()) |> 
+    arrange(event_id, date_seq) |> 
+    write_csv(here::here("data/processed/actual_DGS1.csv"))
+
+```
+
+
+
+```{r}
+process_one_events_set <- function(events, window_length) {
+
+    # Guard: ensure window_length is at least 1
+    if (window_length < 1) {
+        stop("window_length must be >= 1")
+    }  
+
+    # Guard: ensure events has required columns
+    required_cols <- c("event_id", "event_date", "event_date_index")
+    missing_cols <- setdiff(required_cols, names(events))
+    
+    if (length(missing_cols) > 0) {
+        stop("events dataframe is missing required columns: ", 
+             paste(missing_cols, collapse = ", "))
+    }
+
+    initial_price_window = events |> 
+        mutate(initial_index = event_date_index - window_length) |> 
+        inner_join(dt, by=join_by(initial_index == trading_day_index)) |> 
+        select(event_id, event_date, symbol, initial_price=price)
+
+    dt_window_index = events |> 
+        mutate(
+            window_start = event_date_index - window_length,
+            window_end = event_date_index + window_length
+        ) |> 
+        inner_join(dt, by=join_by(between(y$trading_day_index,x$window_start,x$window_end))) |> 
+        mutate(
+            period = case_when(
+                trading_day_index == event_date_index ~ "event",
+                between(trading_day_index, event_date_index - window_length, event_date_index -1) ~ "before", 
+                between(trading_day_index, event_date_index +1, event_date_index + window_length) ~ "after"
+            ),
+            window_index = trading_day_index - event_date_index
+        ) |> 
+        select(-window_start, -window_end)
+
+    dt_price_change = dt_window_index |> 
+        inner_join(initial_price_window) |> 
+        mutate( price_change = price - initial_price)
+
+    window_plot_data = dt_price_change |> 
+        group_by(symbol, window_index) |> 
+        summarize(
+            median_price_change = median(price_change)
+        )
+    return(window_plot_data)
+}
+```

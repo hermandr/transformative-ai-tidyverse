@@ -75,14 +75,36 @@ Start Date: `r start_date` End Date: `r end_date`
 #### Treasury and TIPS symbols from FRED
 
 ```{r}
-kable(METADATA)
+TREASURY_SYMBOLS <- c("DGS1", "DGS5", "DGS10", "DGS20", "DGS30")
+TIPS_SYMBOLS <- c("DFII5", "DFII10", "DFII20", "DFII30")
+bond_metadata <- tibble(
+  symbol=c(TREASURY_SYMBOLS, TIPS_SYMBOLS),
+  description=c(
+    "Market Yield on U.S. Treasury Securities at 1-Year Constant Maturity, Quoted on an Investment Basis (Nominal)",
+    "Market Yield on U.S. Treasury Securities at 5-Year Constant Maturity, Quoted on an Investment Basis (Nominal)",
+    "Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity, Quoted on an Investment Basis (Nominal)",
+    "Market Yield on U.S. Treasury Securities at 20-Year Constant Maturity, Quoted on an Investment Basis (Nominal)",
+    "Market Yield on U.S. Treasury Securities at 30-Year Constant Maturity, Quoted on an Investment Basis (Nominal)",
+    "Market Yield on U.S. Treasury Securities at 5-Year Constant Maturity, Quoted on an Investment Basis, Inflation-Indexed (TIPS yield)",
+    "Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity, Quoted on an Investment Basis, Inflation-Indexed (TIPS yield)",
+    "Market Yield on U.S. Treasury Securities at 20-Year Constant Maturity, Quoted on an Investment Basis, Inflation-Indexed (TIPS yield)",
+    "Market Yield on U.S. Treasury Securities at 30-Year Constant Maturity, Quoted on an Investment Basis, Inflation-Indexed (TIPS yield)"
+  ),
+  data_group = c(rep("Treasury",5), rep("TIPS",4)),
+  maturity = c(1,5,10,20,30,5,10,20,30)
+)
+
+```
+
+```{r}
+kable(bond_metadata)
 ```
 
 #### Retrieve bond yield data from FRED
 
 ```{r}
 bond_data <- tq_get(
-  METADATA$data_name,
+  bond_metadata$symbol,
   get = "economic.data",
   from = start_date,
   to = end_date
@@ -90,6 +112,12 @@ bond_data <- tq_get(
 
 kable(bond_data |> slice_sample(n=20))
 ```
+
+**Note about corporate bonds**
+
+Corporate bond data (ICE BofA indices) not included in this script. Corporate bonds may require manual download or alternative data source. See paper Section 3.2 for details on corporate bond data requirements.
+
+Data retrieval completed successfully!
 
 ### Check data quality
 
@@ -99,13 +127,24 @@ cat("Data retrieval summary:\n")
 cat("- Total observations:", nrow(bond_data), "\n")
 cat("- Date range:", min(bond_data$date, na.rm = TRUE), "to", max(bond_data$date, na.rm = TRUE), "\n")
 cat("- Symbols retrieved:", length(unique(bond_data$symbol)), "\n")
+cat("- Observations with no data:", bond_data |> filter(is.na(price)) |> nrow() )
+
+```
+
+#### Remove NULLS
+
+```{r}
+bond_data_clean = bond_data |> filter(!is.na(price))
+
+cat("After cleaning:")
+cat("- Observations with no data:", bond_data_clean |> filter(is.na(price)) |> nrow() )
 
 ```
 
 #### Check for missing values by symbol
 
 ```{r}
-missing_summary <- bond_data %>%
+missing_summary <- bond_data_clean %>%
   group_by(symbol) %>%
   summarise(
     total_obs = n(),
@@ -121,7 +160,13 @@ kable(missing_summary)
 ### Save raw data
 
 ```{r}
-write_csv(bond_data, here("data/raw/bond_yields_raw.csv"))
+write_csv(bond_metadata, here("data/raw/bond_metadata.csv"))
+cat("\nBond metadata saved to: data/raw/bond_metadata.csv\n")
+
+```
+
+```{r}
+write_csv(bond_data_clean, here("data/raw/bond_yields_raw.csv"))
 cat("\nRaw data saved to: data/raw/bond_yields_raw.csv\n")
 
 ```
@@ -130,7 +175,7 @@ cat("\nRaw data saved to: data/raw/bond_yields_raw.csv\n")
 
 ```{r}
 
-data_summary <- bond_data %>%
+data_summary <- bond_data_clean %>%
   group_by(symbol) %>%
   summarise(
     start_date = min(date, na.rm = TRUE),
@@ -155,12 +200,4 @@ cat("Summary statistics saved to: data/raw/bond_yields_summary.csv\n")
 
 ```
 
-## Note about corporate bonds
-
-Note: Corporate bond data (ICE BofA indices) not included in this script.
-
-Corporate bonds may require manual download or alternative data source.
-
-See paper Section 3.2 for details on corporate bond data requirements.
-
-Data retrieval completed successfully!
+##

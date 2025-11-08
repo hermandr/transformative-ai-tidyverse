@@ -1,0 +1,232 @@
+---
+title: "Plot Placebo VS Actual"
+author: "Your Name"
+date: today
+format: html
+editor: visual
+execute:
+  warning: false
+  echo: false
+---
+
+```{r}
+source(here::here("_common.R"))
+```
+
+
+
+```{r}
+actual_data = read_csv(here("data/processed/actual_event_long_window.csv"))
+placebo_data = read_csv(here("data/processed/placebo_long_window.csv"))
+bond_metadata = read_csv(here("data/raw/bond_metadata.csv"))
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Define colors (three shades of gray, solid black for median)
+metric_colors <- c(
+  "placebo_mean"     = "black",
+  "p99_lower"  = "#bbbbbb",
+  "p99_upper"  = "#bbbbbb",
+  "p95_lower"  = "#888888",
+  "p95_upper"  = "#888888",
+  "p90_lower"  = "#444444",
+  "p90_upper"  = "#444444",
+  "actual_median_price_change" = "red",
+  "actual_median_abs_price_change" = "red"
+)
+
+# Define line types: solid for median, dashed for bands
+metric_linetypes <- c(
+  "placebo_mean"     = "solid",
+  "p90_lower"  = "dashed",
+  "p90_upper"  = "dashed",
+  "p95_lower"  = "dashed",
+  "p95_upper"  = "dashed",
+  "p99_lower"  = "dashed",
+  "p99_upper"  = "dashed",
+  "actual_median_price_change" = "solid",
+  "actual_median_abs_price_change" = "solid"
+)
+```
+
+```{r}
+placebo_symbol_index = placebo_data |> 
+    group_by(symbol, window_index) |> 
+    summarize(
+        p99_upper = quantile(median_price_change, 0.995, na.rm=TRUE),
+        p95_upper = quantile(median_price_change, 0.975, na.rm=TRUE),
+        p90_upper = quantile(median_price_change, 0.950, na.rm=TRUE),
+        placebo_mean = mean(median_price_change),
+        p90_lower = quantile(median_price_change, 0.050, na.rm=TRUE),
+        p95_lower = quantile(median_price_change, 0.025, na.rm=TRUE),
+        p99_lower = quantile(median_price_change, 0.005, na.rm=TRUE),
+        n = n()
+    )
+```
+
+
+```{r}
+actual_data = read_csv(here("data/processed/actual_event_long_window.csv"))
+
+actual_symbol_index = actual_data |> 
+    group_by(symbol, window_index) |> 
+    summarize(
+        actual_median_price_change = median(price_change)
+    )
+
+```
+
+## Plot Median Price Changes
+```{r}
+plot_data = placebo_symbol_index |> 
+    inner_join(actual_symbol_index)
+```
+
+```{r}
+plot_data_prep = plot_data |> 
+    inner_join(bond_metadata) |> 
+    pivot_longer(
+        cols = c(p99_upper, p95_upper, p90_upper, placebo_mean, p90_lower, p95_lower, p99_lower, actual_median_price_change),
+        names_to = "metric",
+        values_to = "value"        
+    ) |> 
+    mutate(
+        value_bps = value*100
+    )  
+```
+
+### Treasuries
+```{r}
+plot_data_prep |> 
+    filter(data_group == "Treasury") |> 
+    ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +
+    geom_line(size = 1.2) +
+    scale_color_manual(values = metric_colors) +
+    scale_linetype_manual(values = metric_linetypes) +
+    facet_wrap(~ maturity) +
+    labs(
+        title = "Percentile Bands and Median - Treasuries",
+        x = "Window Index",
+        y = "Value (bps)",
+        color = "Metric",
+        linetype = "Metric"
+    ) +
+    theme_minimal() |> 
+    theme(legend.position = "none")
+```
+
+### TIPS
+```{r}
+plot_data_prep |> 
+    filter(data_group == "TIPS") |> 
+    ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +
+    geom_line(size = 1.2) +
+    scale_color_manual(values = metric_colors) +
+    scale_linetype_manual(values = metric_linetypes) +
+    facet_wrap(~ maturity) +
+    labs(
+        title = "Percentile Bands and Median - TIPS",
+        x = "Window Index",
+        y = "Value (bps)",
+        color = "Metric",
+        linetype = "Metric"
+    ) +
+    theme_minimal() |> 
+    theme(legend.position = "none")
+```
+
+## Plot Median Absolute Price Changes
+
+```{r}
+placebo_symbol_index_abs = placebo_data |> 
+    group_by(symbol, window_index) |> 
+    summarize(
+        p99_upper = quantile(median_abs_price_change, 0.995, na.rm=TRUE),
+        p95_upper = quantile(median_abs_price_change, 0.975, na.rm=TRUE),
+        p90_upper = quantile(median_abs_price_change, 0.950, na.rm=TRUE),
+        placebo_mean = mean(median_abs_price_change),
+        p90_lower = quantile(median_abs_price_change, 0.050, na.rm=TRUE),
+        p95_lower = quantile(median_abs_price_change, 0.025, na.rm=TRUE),
+        p99_lower = quantile(median_abs_price_change, 0.005, na.rm=TRUE),
+        n = n()
+    )
+```
+
+
+```{r}
+
+actual_symbol_index_abs = actual_data |> 
+    group_by(symbol, window_index) |> 
+    summarize(
+        actual_median_abs_price_change = median(abs(price_change))
+    )
+
+```    
+
+```{r}
+plot_data = placebo_symbol_index_abs |> 
+    inner_join(actual_symbol_index_abs)
+```
+
+```{r}
+plot_data_prep = plot_data |> 
+    inner_join(bond_metadata) |> 
+    pivot_longer(
+        cols = c(p99_upper, p95_upper, p90_upper, placebo_mean, p90_lower, p95_lower, p99_lower, actual_median_abs_price_change),
+        names_to = "metric",
+        values_to = "value"        
+    ) |> 
+    mutate(
+        value_bps = value*100
+    )  
+```
+
+
+### Treasuries
+```{r}
+plot_data_prep |> 
+    filter(data_group == "Treasury") |> 
+    ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +
+    geom_line(size = 1.2) +
+    scale_color_manual(values = metric_colors) +
+    scale_linetype_manual(values = metric_linetypes) +
+    facet_wrap(~ maturity) +
+    labs(
+        title = "Percentile Bands and Median - Treasuries",
+        x = "Window Index",
+        y = "Value (bps)",
+        color = "Metric",
+        linetype = "Metric"
+    ) +
+    theme_minimal() |> 
+    theme(legend.position = "none")
+```
+
+### TIPS
+```{r}
+plot_data_prep |> 
+    filter(data_group == "TIPS") |> 
+    ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +
+    geom_line(size = 1.2) +
+    scale_color_manual(values = metric_colors) +
+    scale_linetype_manual(values = metric_linetypes) +
+    facet_wrap(~ maturity) +
+    labs(
+        title = "Percentile Bands and Median - TIPS",
+        x = "Window Index",
+        y = "Value (bps)",
+        color = "Metric",
+        linetype = "Metric"
+    ) +
+    theme_minimal() |> 
+    theme(legend.position = "none")
+```
+
+
+```{r}
+write_csv(plot_data, here("data/processed/actual_placebo_plot_long_window.csv"))
+```
