@@ -190,7 +190,6 @@ placebo_data |> group_by(symbol, window_index) |> count()
 
 #### Save Placebo Data
 
-
 ```{r}
 write_csv(placebo_data, here("data/processed/placebo_long_window.csv"))
 ```

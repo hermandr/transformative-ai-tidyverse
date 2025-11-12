@@ -13,91 +13,9 @@ execute:
 source(here::here("_common.R"))
 ```
 
-## Data Preparation
-
-### Data Processing
-
-#### Load raw data
-
-#### FRED Data on Treasury Bonds
-
 ```{r}
-bond_metadata <- read_csv(here("data/raw/bond_metadata.csv"), show_col_types = FALSE)
-kable(bond_metadata)
-```
-
-#### `bond_yields` sampled rows
-
-```{r}
-bond_yields <- read_csv(here("data/raw/bond_yields_raw.csv"), show_col_types = FALSE)
-kable(bond_yields |> slice_sample(n=10))
-```
-
-#### `ai_events` sampled rows
-
-```{r}
-ai_events <- read_csv(here("data/raw/ai_events_raw.csv"), show_col_types = FALSE) %>%
-  mutate(date = as.Date(date))
-kable(ai_events |> slice_sample(n=10))
-```
-
-cat("Loaded", nrow(bond_yields), "bond yield observations\n") cat("Loaded", nrow(ai_events), "AI event dates\n")
-
-### Build Event Windows
-
-Steps:
-
-1.  Create dataframe of trading dates from the yields table based on `DGS10` data
-2.  As the dates will not be sequential, assign a row id as a sequence
-3.  Select the trading dates from the yields table
-4.  Impute missing data
-5.  For each AI event date create a dataframe of yields prices from -15 days to +15 days after event date
-
-#### Yields data for trading dates
-
-```{r}
-yields = bond_yields |> 
-    filter(!is.na(price)) |>   # should not have any
-    arrange(symbol, date) |> 
-    group_by(symbol) |> 
-    mutate(
-        trading_day_index = row_number()
-    )
-
-yields |> slice_sample(n=4) |> kable()
-
-```
-
-```{r}
-dt = yields
-```
-
-#### AI Event Dates Event Study Windows
-
-Assign `event_id` as there are identical dates
-
-```{r}
-events = ai_events |> 
-    mutate(
-        year = as.integer(year)
-    ) |> 
-    arrange(date, company) |> 
-    rowid_to_column(var="event_id") |> 
-    select(event_id, event_date = date)
-```
-
-### Function to create analysis Dataframe
-
-```{r}
-source(here::here("dev/process_one_events_set.R"))
-```
-
-#### Long Window -15 to +15 days
-
-```{r}
-dt_long_window = process_one_events_set(events, window_length = 15, dt)
-dt_long_price_change = dt_long_window[[1]]
-long_window_plot_data = dt_long_window[[2]]
+dt_long_price_change = read_csv(here("data/processed/actual_event_long_window.csv"))
+long_window_plot_data = read_csv(here("data/processed/plot_data_long_window.csv"))
 ```
 
 Replicating Figure 1
@@ -180,8 +98,4 @@ long_window_plot_data |>
         y = "Basis points (bp)"
     ) +
     theme_minimal()
-```
-
-```{r}
-write_csv(dt_long_price_change, here("data/processed/actual_event_long_window.csv"))
 ```

@@ -1,0 +1,332 @@
+---
+title: "Data Preparation"
+author: "Your Name"
+date: today
+format: html
+editor: visual
+execute:
+  warning: false
+  echo: false
+---
+
+```{r}
+source(here::here("_common.R"))
+```
+
+## Data Preparation
+
+### Data Processing
+
+#### Load raw data
+
+#### FRED Data on Treasury Bonds
+
+```{r}
+bond_metadata <- read_csv(here("data/raw/bond_metadata.csv"), show_col_types = FALSE)
+kable(bond_metadata)
+```
+
+#### `bond_yields` sampled rows
+
+```{r}
+bond_yields <- read_csv(here("data/raw/bond_yields_raw.csv"), show_col_types = FALSE)
+kable(bond_yields |> slice_sample(n=10))
+```
+
+#### `ai_events` sampled rows
+
+```{r}
+ai_events <- read_csv(here("data/raw/ai_events_raw.csv"), show_col_types = FALSE) %>%
+  mutate(date = as.Date(date))
+kable(ai_events |> slice_sample(n=10))
+```
+
+cat("Loaded", nrow(bond_yields), "bond yield observations\n") cat("Loaded", nrow(ai_events), "AI event dates\n")
+
+### Build Event Windows
+
+Steps:
+
+1.  Create dataframe of trading dates from the yields table based on `DGS10` data
+2.  As the dates will not be sequential, assign a row id as a sequence
+3.  Select the trading dates from the yields table
+4.  Impute missing data
+5.  For each AI event date create a dataframe of yields prices from -15 days to +15 days after event date
+
+#### Yields data for trading dates
+
+```{r}
+yields = bond_yields |> 
+    filter(!is.na(price)) |>   # should not have any
+    arrange(symbol, date) |> 
+    # Day index is sequenced by each symbol separately
+    group_by(symbol) |> 
+    mutate(
+        trading_day_index = row_number()
+    )
+
+yields |> slice_sample(n=4) |> kable()
+
+```
+
+```{r}
+dt = yields
+```
+
+#### AI Event Dates Event Study Windows
+
+Assign `event_id` as there are identical dates
+
+```{r}
+events = ai_events |> 
+    mutate(
+        year = as.integer(year)
+    ) |> 
+    arrange(date, company) |> 
+    rowid_to_column(var="event_id") |> 
+    select(event_id, event_date = date)
+```
+
+### Function to create analysis Dataframe
+
+```{r}
+source(here::here("scripts/process_one_events_set.R"))
+```
+
+#### Long Window -15 to +15 days
+
+```{r}
+dt_long_window = process_one_events_set(events, window_length = 15, dt)
+dt_long_price_change = dt_long_window[[1]]
+long_window_plot_data = dt_long_window[[2]]
+```
+
+```{r}
+write_csv(dt_long_price_change, here("data/processed/actual_event_long_window.csv"))
+write_csv(long_window_plot_data, here("data/processed/plot_data_long_window.csv"))
+```
+
+## Placebo Permutated Inference
+
+Global: `dt` dataframe Input: `events` dataframe Output: 31 rows per symbol of median price changes
+
+
+
+### Build Event Windows
+
+Steps:
+
+1.  Create dataframe of trading dates from the yields table based on `DGS10` data
+2.  As the dates will not be sequential, assign a row id as a sequence
+3.  Select the trading dates from the yields table
+4.  Impute missing data
+5.  For each AI event date create a dataframe of yields prices from -15 days to +15 days after event date
+
+
+
+### Placebo Event Dates Replicates
+
+#### Candidate Placebo Event Dates
+
+#### Need to do... trading dates to be sampled not same for each symbol
+
+Assemble the list of placebo dates for each symbol:
+1. there seems to some dates (not consistent across symbols) that are null which we assume to be non-trading days
+2. we remove first 15 and last 15 days of the observation period so we always get a complete -15 and +15 days
+
+```{r}
+placebo_symbol_dates = dt |> 
+  # Remove the AI event dates from candidate placebo set
+  anti_join(ai_events, by = "date") |> 
+  # remove first 15 and last 15 dates
+  arrange(symbol,date) |> 
+  group_by(symbol) |> 
+  mutate(
+    idx = row_number(),
+    start_idx = 1 + 15,
+    end_idx = max(idx) - 15 - 1
+  ) |> 
+  filter(between(idx, start_idx, end_idx)) |> 
+  select(symbol, date)
+```
+
+```{r}
+source(here::here("scripts/process_one_events_set.R"))
+```
+
+
+Generate 5000 replicates of same sample size as the actual event dates.
+
+```{r}
+library(furrr)
+library(progressr)
+
+num_events = nrow(ai_events)
+
+# Set up parallel processing
+plan(multisession, workers = availableCores() - 1)  # Leave one core free
+
+result = placebo_symbol_dates |> 
+    group_by(symbol) |> 
+    nest(.key = "candidate_dates") |> 
+    mutate(
+      placebo_event_dates = future_map(candidate_dates, \(date_df) {
+        date_df |>
+          slice_sample(n=num_events) |>
+          arrange(date) |>
+          rowid_to_column() |>
+          rename(event_id = rowid, event_date = date)        
+      },
+      .options = furrr_options(seed = TRUE)
+      )
+    )
+
+# Clean up when done
+plan(sequential)
+```
+
+Set globals
+```{r}
+
+num_events = nrow(ai_events)
+num_symbols = placebo_symbol_dates |> group_by(symbol) |> count() |> nrow()
+
+```
+
+Sequential
+
+```{r}
+
+pick_event_dates = function(date_df){
+    date_df |>
+      slice_sample(n=num_events) |>
+      arrange(date) |>
+      rowid_to_column() |>
+      rename(event_id = rowid, event_date = date)        
+}
+
+placebo_event_dates_fn = function(){
+  placebo_symbol_dates |> 
+    group_by(symbol) |> 
+    nest(.key = "candidate_dates") |> 
+    mutate(
+      placebo_event_dates = map(candidate_dates, ~ pick_event_dates(.x))
+    ) |> select(-candidate_dates)
+}
+
+reps = replicate(
+  n=10, 
+    placebo_symbol_dates |> 
+      group_by(symbol) |> 
+      nest(.key = "candidate_dates") |> 
+      mutate(
+        placebo_event_dates = map(candidate_dates, ~ pick_event_dates(.x))
+      ) |> select(-candidate_dates)
+  ,
+  simplify = FALSE 
+)
+
+
+reps = replicate(
+  n=10, 
+  placebo_event_dates_fn(),
+  simplify = FALSE 
+)
+
+
+reps = tibble(rep_id = seq(1,10)) |> 
+  mutate(
+    reps = replicate(
+      n=10, 
+      placebo_event_dates_fn(),
+      simplify = FALSE 
+    )
+  )
+
+```
+
+Parallel
+```{r}
+library(furrr)
+library(progressr)
+
+pick_event_dates_furrr = function(dates_df_list){
+  p = progressor(steps = length(dates_df_list))
+
+  future_map(dates_df_list, \(date_df) {
+    p() 
+
+    pick_event_dates(date_df)        
+  },
+  .options = furrr_options(seed = TRUE)
+  )
+}
+
+# Set up parallel processing
+plan(multisession, workers = availableCores() - 1)  # Leave one core free
+
+with_progress({
+  placebo_event_dates_furrr = placebo_symbol_dates |> 
+    group_by(symbol) |> 
+    nest(.key = "candidate_dates") |> 
+    pull() |> pick_event_dates_furrr()
+})
+
+# Clean up when done
+plan(sequential)
+
+```
+
+
+#### AI Event Dates Event Study Windows
+
+
+```{r}
+library(furrr)
+
+# Set up parallel processing
+plan(multisession, workers = availableCores() - 1)  # Leave one core free
+
+# Parallel version of your code
+rep_data <- replicates |> 
+    group_by(symbol) |> 
+    mutate(
+        placebo_events = future_map2(symbol, placebo_symbol_dates, \(sym, df) {
+            df |> 
+                arrange(date) |> 
+                rowid_to_column(var="event_id") |> 
+                inner_join(placebo_symbol_dates |> filter(symbol == symbol)) |> 
+                select(event_id, event_date = date, event_date_index = trading_day_index)
+        }, 
+            .options = furrr_options(seed = TRUE),
+            .progress = TRUE
+        ),
+        plot_data = future_map(placebo_events, \(df) {
+            result = process_one_events_set(df, 15, dt)
+            return(result[[2]])
+        }, 
+            .options = furrr_options(seed = TRUE),
+            .progress = TRUE
+        )
+    )
+
+# Clean up when done
+plan(sequential)
+```
+
+```{r}
+placebo_data = rep_data |> 
+    pull(plot_data) |> 
+    list_rbind(names_to = "rep_id")
+```
+
+`data` now has 5000 replicates of each symbol, window_index
+
+```{r}
+placebo_data |> group_by(symbol, window_index) |> count()
+```
+
+#### Save Placebo Data
+
+```{r}
+write_csv(placebo_data, here("data/processed/placebo_long_window.csv"))
