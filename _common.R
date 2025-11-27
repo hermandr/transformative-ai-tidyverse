@@ -39,14 +39,15 @@ library(scales)
 library(knitr)
 library(kableExtra)
 library(here)
+library(stringr)
 
 # Project-specific settings
 PROJECT_START_DATE <- as.Date("2023-01-01")
 PROJECT_END_DATE <- as.Date("2024-12-31")
 N_PERMUTATIONS <- 5000
 EVENT_WINDOWS <- list(
-  short = list(b = 5, s_range = -5:5),
-  long = list(b = 15, s_range = -15:15)
+  short = list(length = 5,  first = -5,  last = 5),
+  long  = list(length = 15, first = -15, last = 15)
 )
 
 # Print project info

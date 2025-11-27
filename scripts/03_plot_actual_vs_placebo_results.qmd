@@ -7,17 +7,16 @@ editor: visual
 execute:
   warning: false
   echo: false
+  cache: false
 ---
 
 ```{r}
 source(here::here("_common.R"))
 ```
 
-
-
 ```{r}
 actual_data = read_csv(here("data/processed/actual_event_long_window.csv"))
-placebo_data = read_csv(here("data/processed/placebo_long_window.csv"))
+placebo_data = read_rds(here("data/processed/placebo_long_window_plot_data.rds"))
 bond_metadata = read_csv(here("data/raw/bond_metadata.csv"))
 ```
 
@@ -68,7 +67,6 @@ placebo_symbol_index = placebo_data |>
     )
 ```
 
-
 ```{r}
 actual_data = read_csv(here("data/processed/actual_event_long_window.csv"))
 
@@ -81,6 +79,7 @@ actual_symbol_index = actual_data |>
 ```
 
 ## Plot Median Price Changes
+
 ```{r}
 plot_data = placebo_symbol_index |> 
     inner_join(actual_symbol_index)
@@ -99,7 +98,12 @@ plot_data_prep = plot_data |>
     )  
 ```
 
+```{r}
+write_csv(plot_data, here("data/processed/actual_placebo_median_price_changes_plot_long_window.csv"))
+```
+
 ### Treasuries
+
 ```{r}
 plot_data_prep |> 
     filter(data_group == "Treasury") |> 
@@ -120,6 +124,7 @@ plot_data_prep |>
 ```
 
 ### TIPS
+
 ```{r}
 plot_data_prep |> 
     filter(data_group == "TIPS") |> 
@@ -156,7 +161,6 @@ placebo_symbol_index_abs = placebo_data |>
     )
 ```
 
-
 ```{r}
 
 actual_symbol_index_abs = actual_data |> 
@@ -165,11 +169,15 @@ actual_symbol_index_abs = actual_data |>
         actual_median_abs_price_change = median(abs(price_change))
     )
 
-```    
+```
 
 ```{r}
 plot_data = placebo_symbol_index_abs |> 
     inner_join(actual_symbol_index_abs)
+```
+
+```{r}
+write_csv(plot_data, here("data/processed/actual_placebo_median_abs_price_changes_plot_long_window.csv"))
 ```
 
 ```{r}
@@ -185,8 +193,8 @@ plot_data_prep = plot_data |>
     )  
 ```
 
-
 ### Treasuries
+
 ```{r}
 plot_data_prep |> 
     filter(data_group == "Treasury") |> 
@@ -207,6 +215,7 @@ plot_data_prep |>
 ```
 
 ### TIPS
+
 ```{r}
 plot_data_prep |> 
     filter(data_group == "TIPS") |> 
@@ -224,9 +233,4 @@ plot_data_prep |>
     ) +
     theme_minimal() |> 
     theme(legend.position = "none")
-```
-
-
-```{r}
-write_csv(plot_data, here("data/processed/actual_placebo_plot_long_window.csv"))
 ```

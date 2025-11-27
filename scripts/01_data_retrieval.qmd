@@ -7,6 +7,7 @@ editor: visual
 execute:
   warning: false
   echo: false
+  cache: false
 ---
 
 ```{r}

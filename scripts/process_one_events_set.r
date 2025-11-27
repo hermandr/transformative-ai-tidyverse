@@ -54,14 +54,15 @@ process_one_events_set <- function(events, window_length, dt) {
         select(-window_start, -window_end)
 
     dt_price_change = dt_window_index |> 
-        inner_join(initial_price_window) |> 
+        inner_join(initial_price_window, by = join_by(event_id, event_date, symbol)) |> 
         mutate( price_change = price - initial_price)
 
     window_plot_data = dt_price_change |> 
         group_by(symbol, window_index) |> 
         summarize(
             median_price_change = median(price_change),
-            median_abs_price_change = median(abs(price_change))
+            median_abs_price_change = median(abs(price_change)),
+            .groups = "drop"
         )
     return(list(dt_price_change,window_plot_data))
 }
