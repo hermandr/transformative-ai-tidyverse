@@ -1,0 +1,16 @@
+---
+title: "My First Post"
+description: "A description of my post"
+author: "Your Name"
+date: 2025-12-01
+categories: [R, Analysis]
+---
+
+# Introduction
+
+Your content here with R code blocks:
+
+
+```{r}
+mtcars
+```
