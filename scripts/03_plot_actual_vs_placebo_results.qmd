@@ -15,7 +15,7 @@ format:
     code-summary: "Show code"
     code-overflow: wrap
     fig-width: 10
-    fig-height: 6
+    fig-height: 8
     fig-dpi: 300
     df-print: paged
     smooth-scroll: true
@@ -33,6 +33,21 @@ execute:
 #| echo: false
 source(here::here("_common.R"))
 
+# knitr settings
+knitr::opts_chunk$set(
+  # Code output:
+  warning = FALSE,
+  message = FALSE,
+  echo = TRUE,
+  # Figure:
+  out.width = "100%",
+  fig.width = 10,
+  fig.height = 8,
+  fig.align = "center",
+  # Etc:
+  collapse = TRUE,
+  comment = "#>"
+)
 ```
 
 ## Research Question and Study Setup
@@ -85,20 +100,20 @@ bond_metadata = read_csv(here("data/raw/bond_metadata.csv"))
 #| label: define plot-aesthetics
 # Define colors (three shades of gray, solid black for median)
 metric_colors <- c(
-  "placebo_mean"     = "black",
+  "placebo_mean" = "black",
   "p99_lower"  = "#bbbbbb",
   "p99_upper"  = "#bbbbbb",
   "p95_lower"  = "#888888",
   "p95_upper"  = "#888888",
   "p90_lower"  = "#444444",
   "p90_upper"  = "#444444",
-  "actual_median_price_change" = "red",
-  "actual_median_abs_price_change" = "red"
+  "actual_median_price_change" = "#0057B8",
+  "actual_median_abs_price_change" = "#0057B8"
 )
 
 # Define line types: solid for median, dashed for bands
 metric_linetypes <- c(
-  "placebo_mean"     = "solid",
+  "placebo_mean" = "solid",
   "p90_lower"  = "dashed",
   "p90_upper"  = "dashed",
   "p95_lower"  = "dashed",
@@ -169,8 +184,9 @@ write_csv(plot_data, here("data/processed/actual_placebo_median_price_changes_pl
 
 ```{r}
 #| label: plot-median-treasuries
+
 plot_data_prep |> 
-    filter(data_group == "Treasury") |> 
+    filter(data_group == "Treasury", maturity > 1) |> 
     ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +
     geom_line(size = 1.2) +
     scale_color_manual(values = metric_colors) +
@@ -183,14 +199,22 @@ plot_data_prep |>
         color = "Metric",
         linetype = "Metric"
     ) +
-    theme_minimal() |> 
-    theme(legend.position = "none")
+    theme_minimal() +
+    theme(
+        legend.position = "none",
+        panel.background = element_rect(fill = "white", color = NA),
+        plot.background = element_rect(fill = "white", color = NA),
+        panel.grid.major = element_line(color = "grey80"),
+        panel.grid.minor = element_line(color = "grey90")
+    )
 ```
 
 ### TIPS
 
 ```{r}
 #| label: plot-median-tips
+#| fig-cap: "Median change in yields (relative to fifteen days before event) for constant-maturity US Treasury Bonds and TIPS. Median taken across AI release events in the 2023 to 2025 calendar years. Placebo distribution recomputes statistics on dates drawn uniformly at random from sample period."
+
 plot_data_prep |> 
     filter(data_group == "TIPS") |> 
     ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +
@@ -205,8 +229,14 @@ plot_data_prep |>
         color = "Metric",
         linetype = "Metric"
     ) +
-    theme_minimal() |> 
-    theme(legend.position = "none")
+    theme_minimal() +
+    theme(
+        legend.position = "none",
+        panel.background = element_rect(fill = "white", color = NA),
+        plot.background = element_rect(fill = "white", color = NA),
+        panel.grid.major = element_line(color = "grey80"),
+        panel.grid.minor = element_line(color = "grey90")
+    )
 ```
 
 ### Key Findings
@@ -279,7 +309,7 @@ plot_data_prep = plot_data |>
 ```{r}
 #| label: plot-abs-treasuries
 plot_data_prep |> 
-    filter(data_group == "Treasury") |> 
+    filter(data_group == "Treasury", maturity > 1) |> 
     ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +
     geom_line(size = 1.2) +
     scale_color_manual(values = metric_colors) +
@@ -292,14 +322,22 @@ plot_data_prep |>
         color = "Metric",
         linetype = "Metric"
     ) +
-    theme_minimal() |> 
-    theme(legend.position = "none")
+    theme_minimal() +
+    theme(
+        legend.position = "none",
+        panel.background = element_rect(fill = "white", color = NA),
+        plot.background = element_rect(fill = "white", color = NA),
+        panel.grid.major = element_line(color = "grey80"),
+        panel.grid.minor = element_line(color = "grey90")
+    )
 ```
 
 ### TIPS
 
 ```{r}
 #| label: plot-abs-tips
+#| fig-cap: "Median absolute change in yields (relative to fifteen days before event) for constant-maturity US Treasury Bonds and TIPS. Median taken across AI release events in the 2023 to 2025 calendar years. Placebo distribution recomputes statistics on dates drawn uniformly at random from sample period."
+
 plot_data_prep |> 
     filter(data_group == "TIPS") |> 
     ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +
@@ -314,8 +352,14 @@ plot_data_prep |>
         color = "Metric",
         linetype = "Metric"
     ) +
-    theme_minimal() |> 
-    theme(legend.position = "none")
+    theme_minimal() +
+    theme(
+        legend.position = "none",
+        panel.background = element_rect(fill = "white", color = NA),
+        plot.background = element_rect(fill = "white", color = NA),
+        panel.grid.major = element_line(color = "grey80"),
+        panel.grid.minor = element_line(color = "grey90")
+    )
 ```
 
 Absolute yield changes, which measure the magnitude of bond yield movements regardless of direction, were not statistically significant around AI model releases according to the study. This means bond yields did not show larger-than-usual fluctuations in absolute terms (regardless of whether yields went up or down) when major AI news was announced, compared to normal periods. Only the direction (median change, mostly downward) was consistently significant for longer maturities, not the absolute magnitude of the change.
