@@ -1,6 +1,6 @@
 ---
 title: "Plot Placebo VS Actual"
-author: "Your Name"
+author: "Herman Tan"
 date: today
 format: html
 editor: visual
@@ -12,9 +12,55 @@ execute:
 
 ```{r}
 #| label: setup
+#| echo: false
 source(here::here("_common.R"))
 
 ```
+
+## Research Question and Study Setup
+
+**Do financial markets believe in transformative AI?**
+
+This study investigates whether economic actors take seriously the possibility of transformative AI—technologies with large and sustained impacts on living standards, particularly through effects on consumption growth or existential risk. The central premise is that if market participants genuinely believe in transformative AI, this belief should manifest in forward-looking financial market behavior, particularly in long-term asset prices such as US Treasury bonds.
+
+### Theoretical Motivation
+
+Economic theory predicts that transformative technologies influence interest rates through multiple channels:
+
+- **Growth expectations:** If agents expect AI to dramatically accelerate economic growth, they anticipate being richer in the future, reducing the marginal value of future consumption and thus raising real interest rates.
+- **Existential risk (doom):** Concerns about AI-related existential risks increase discount rates due to lower survival probabilities.
+- **Post-scarcity scenarios (bliss):** Beliefs in rapid AI-driven abundance mirror doom's effects on asset pricing by reducing the marginal utility of consumption.
+- **Growth uncertainty:** Increased uncertainty about AI's economic impacts fuels precautionary saving and decreases real interest rates.
+
+### Study Design
+
+**Event Study Approach:** This research employs a financial event study methodology, examining US bond yields around major AI model release dates.
+
+
+**AI Events:** The analysis focuses on 15 major model releases from five leading AI laboratories (OpenAI, Anthropic, Google DeepMind, xAI, and DeepSeek) during calendar years 2023 and 2024. These releases capture significant advancements in generative AI capabilities and provide forward-looking information about AI development timelines.
+
+
+**Key Assumption:** The identification strategy rests on the assumption that AI model release dates are effectively as good as random—driven by technical development timelines rather than financial market conditions. This supports a causal interpretation of yield movements around these dates.
+
+
+**Bond Yield Data:** The study examines three categories of fixed-income instruments:
+
+- **Nominal US Treasury Bonds:** Constant-maturity yields for 1, 5, 10, 20, and 30-year maturities
+- **TIPS (Treasury Inflation-Protected Securities):** Constant-maturity yields for 5, 10, 20, and 30-year maturities
+- **Corporate Bond Indices:** ICE BofA indices by maturity (1-3, 3-5, 5-7, 7-10, 10-15, and 15+ years)
+
+
+**Event Windows:** Yield changes are measured relative to a 15-day pre-event baseline, capturing both information leakage (where models were made available to experts before official release) and direct announcement effects.
+
+
+**Statistical Inference:** Significance is assessed via permutation tests with 5,000 Monte Carlo simulations, drawing random placebo event dates uniformly from the sample period. This approach is robust to small sample sizes and tests whether observed yield changes exceed what would be expected under the null hypothesis of no market reaction to AI news.
+
+
+**Interpretation Framework:** Empirical results are interpreted through a consumption-based asset pricing model (representative agent with CRRA utility). The model predicts that:
+
+- Changes in growth expectations cause level shifts in forward yield curves
+- Changes in extreme outcome probabilities (doom/bliss) also produce level shifts
+- Changes in growth uncertainty would generate slope changes in forward curves
 
 ```{r}
 #| label: load-data
@@ -80,7 +126,7 @@ actual_symbol_index = actual_data |>
 
 ```
 
-## Plot Median Price Changes
+## Plot Median Yield Changes
 
 ```{r}
 #| label: join-actual-placebo
@@ -111,6 +157,8 @@ write_csv(plot_data, here("data/processed/actual_placebo_median_price_changes_pl
 
 ```{r}
 #| label: plot-median-treasuries
+#| fig-width: 10
+#| fig-height: 6
 plot_data_prep |> 
     filter(data_group == "Treasury") |> 
     ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +
@@ -133,6 +181,8 @@ plot_data_prep |>
 
 ```{r}
 #| label: plot-median-tips
+#| fig-width: 10
+#| fig-height: 6
 plot_data_prep |> 
     filter(data_group == "TIPS") |> 
     ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +
@@ -151,7 +201,19 @@ plot_data_prep |>
     theme(legend.position = "none")
 ```
 
-## Plot Median Absolute Price Changes
+### Key Findings
+
+The paper analyzes US bond yields around major AI model releases from 2023-2024 and finds economically large declines, particularly in long-maturity Treasuries, TIPS, and corporate bonds, averaging over 10 basis points and persisting for weeks. These movements are statistically significant for longer maturities, indicating that markets react to AI news as if it reveals forward-looking information about economic trajectories. Through a consumption-based asset pricing model, the declines suggest investors updated beliefs toward lower expected consumption growth or a reduced probability of extreme outcomes like existential risk (doom) or post-scarcity abundance (bliss), rather than increased growth uncertainty.
+
+### Economic Implications
+
+The results imply that financial markets take transformative AI seriously, as non-AI assets like long-term bonds show sustained responses to model releases, reflecting aggregate investor beliefs about AI's potential to alter growth paths or risks. Quantitatively, under CRRA utility assumptions, the average release correlates with a 0.208 percentage point drop in expected annual consumption growth (for log utility) or a similar reduction in the annual probability of bliss/doom, cumulated to 3.12 percentage points across events. This challenges optimistic narratives by showing directional updates toward tempered growth expectations, even as complementary Metaculus forecasts indicate positive surprises in AI capability timelines, suggesting markets may view rapid progress as not fully translating to broad economic gains.
+
+### Policy and Research Implications
+
+For policymakers, the findings highlight AI's potential macroeconomic spillovers, urging monitoring of interest rate effects from technological announcements to inform fiscal and monetary strategies amid uncertainties like default risks or international capital flows (e.g., dollar depreciation). Researchers should extend this event-study approach to disentangle growth from risk updates, perhaps using richer models accounting for market frictions or heterogeneous agents, as the paper's complete-markets framework may overlook real-world deviations. Overall, the evidence supports prioritizing AI governance to mitigate perceived risks while fostering growth-aligned innovations.
+
+## Plot Median Absolute Yield Changes
 
 ```{r}
 #| label: calc-placebo-abs-percentiles
@@ -208,6 +270,8 @@ plot_data_prep = plot_data |>
 
 ```{r}
 #| label: plot-abs-treasuries
+#| fig-width: 10
+#| fig-height: 6
 plot_data_prep |> 
     filter(data_group == "Treasury") |> 
     ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +
@@ -230,6 +294,8 @@ plot_data_prep |>
 
 ```{r}
 #| label: plot-abs-tips
+#| fig-width: 10
+#| fig-height: 6
 plot_data_prep |> 
     filter(data_group == "TIPS") |> 
     ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +
@@ -247,3 +313,19 @@ plot_data_prep |>
     theme_minimal() |> 
     theme(legend.position = "none")
 ```
+
+Absolute yield changes, which measure the magnitude of bond yield movements regardless of direction, were not statistically significant around AI model releases according to the study. This means bond yields did not show larger-than-usual fluctuations in absolute terms (regardless of whether yields went up or down) when major AI news was announced, compared to normal periods. Only the direction (median change, mostly downward) was consistently significant for longer maturities, not the absolute magnitude of the change.
+
+## Interpretation for Investor Beliefs
+
+This implies that investors did not see AI news as a source of unusually high uncertainty or volatility over the event window. Instead, markets responded in a consistent direction, reassessing growth or risk expectations, but not with erratic or large price swings as might happen with new, highly unpredictable information.
+
+## Implications for Market Sentiment
+
+-   The lack of significant absolute changes suggests market participants see AI news as informative but not shocking or destabilizing.
+-   This contrasts with the expectations if transformative AI were seen as a source of “tail risk” or radical uncertainty, which would normally prompt precautionary moves and drive increased volatility.
+-   Market updating appears orderly, reflecting revaluation rather than panic or uncertainty spikes.
+
+## Asset Pricing Context
+
+Under the asset pricing model in the paper, these results suggest that the perceived uncertainty about consumption growth did not increase; news caused market participants to adjust their central scenario for growth or risk—but the spread of possible future paths remained about the same.

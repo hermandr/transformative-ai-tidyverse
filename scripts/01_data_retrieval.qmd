@@ -71,8 +71,8 @@ cat("\nRaw data saved to: data/raw/ai_events_raw.csv\n")
 
 ```{r}
 #| label: define-date-range
-start_date <- "2023-01-01"
-end_date <- "2025-01-31"
+start_date <- PROJECT_START_DATE
+end_date <- PROJECT_END_DATE
 ```
 
 Start Date: `r start_date` End Date: `r end_date`
@@ -129,13 +129,7 @@ Data retrieval completed successfully!
 
 ### Check data quality
 
-
-Data retrieval summary:
-- Total observations: `r nrow(bond_data)`
-- Date range: `r min(bond_data$date, na.rm = TRUE)` to `r max(bond_data$date, na.rm = TRUE)`
-- Symbols retrieved: `r length(unique(bond_data$symbol))`
-- Observations with no data: `r bond_data |> filter(is.na(price)) |> nrow()`
-
+Data retrieval summary: - Total observations: `r nrow(bond_data)` - Date range: `r min(bond_data$date, na.rm = TRUE)` to `r max(bond_data$date, na.rm = TRUE)` - Symbols retrieved: `r length(unique(bond_data$symbol))` - Observations with no data: `r bond_data |> filter(is.na(price)) |> nrow()`
 
 #### Remove NULLS
 
@@ -146,8 +140,7 @@ bond_data_clean = bond_data |> filter(!is.na(price))
 
 ```
 
-After cleaning:
-- Observations with no data: `r bond_data_clean |> filter(is.na(price)) |> nrow()`
+After cleaning: - Observations with no data: `r bond_data_clean |> filter(is.na(price)) |> nrow()`
 
 #### Check for missing values by symbol
 

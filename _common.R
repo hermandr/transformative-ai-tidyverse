@@ -43,7 +43,7 @@ library(stringr)
 
 # Project-specific settings
 PROJECT_START_DATE <- as.Date("2023-01-01")
-PROJECT_END_DATE <- as.Date("2024-12-31")
+PROJECT_END_DATE <- as.Date("2025-01-31")
 N_PERMUTATIONS <- 5000
 EVENT_WINDOWS <- list(
   short = list(length = 5,  first = -5,  last = 5),

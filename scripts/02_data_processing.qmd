@@ -189,28 +189,35 @@ candidate_placebo_symbol_dates = dt |>
 
 Generate `r N_PERMUTATIONS` replicates of same sample size as the actual event dates (`r nrow(ai_events)` dates) with window length `r WINDOW_LENGTH`.
 
-**Method 1** Calculate in one parallel run
+Calculate in one parallel run using `furrr` package
 
 Start time: `r  Sys.time()`
 
 ```{r}
-#| label: generate-placebo-replicates
+#| label: setup-parallel-run
 library(furrr)
-library(progressr)
 
 num_events = nrow(ai_events)
 
 # Set up parallel processing
 start = Sys.time()
 plan(multisession, workers = availableCores() - 1)  # Leave one core free
+```
+
+Runing the calculations across `r availableCores() - 1` cores
+
+```{r}
+#| label: generate-placebo-replicates
 
 placebo_replicates = replicate(N_PERMUTATIONS, 1, simplify = FALSE) |> 
   future_map(\(dummy) {
     candidate_placebo_symbol_dates |>
+      
       # Process by symbol as dates per symbol may not be the same  
       group_by(symbol) |> 
       nest(.key = "candidate_dates") |> 
       mutate(
+          
         # Pick random sample of same size as the actual event dates
         placebo_event_dates = future_map(candidate_dates, \(date_df) {
           date_df |>
@@ -223,20 +230,23 @@ placebo_replicates = replicate(N_PERMUTATIONS, 1, simplify = FALSE) |>
         },
           .options = furrr_options(seed = TRUE)
         ),
+          
+        # Generate the plot data
         plot_data = future_map2(placebo_event_dates, symbol, \(df, sym) {
           result = process_one_events_set(df, WINDOW_LENGTH, dt |> filter(symbol == sym))
           return(result[[2]])
         }, 
-          .options = furrr_options(seed = TRUE),
-          .progress = TRUE
+          .options = furrr_options(seed = TRUE)
         )
       ) |> ungroup()
   },
   .options = furrr_options(seed = TRUE)) |> 
   bind_rows(.id="rep_id") |> 
   mutate(rep_id = as.integer(rep_id))
+```
 
-# Clean up when done
+```{r}
+#| label: clean-up-parallel-run
 plan(sequential)
 end = Sys.time()
 
@@ -245,130 +255,6 @@ cat("Duration:", end - start, "\n")
 ```
 
 End time: r end Duration: r end - start
-
-**Method 2** Calculate in two parallel runs
-
-**Step 1** Generate the Placebo Dates
-
-Start time: `r  Sys.time()`
-
-```{r}
-#| label: generate-placebo-dates
-library(furrr)
-
-num_events = nrow(ai_events)
-
-# Set up parallel processing
-start = Sys.time()
-plan(multisession, workers = availableCores() - 1)  # Leave one core free
-
-placebo_dates = replicate(N_PERMUTATIONS, 1, simplify = FALSE) |> 
-  future_map(\(dummy) {
-    candidate_placebo_symbol_dates |>
-      # Process by symbol as dates per symbol may not be the same  
-      group_by(symbol) |> 
-      # one row per symbol
-      # list of candidate dates to pick the placebo dates from
-      nest(.key = "candidate_dates") |> 
-      # list of placebo dates
-      mutate(
-        # Pick random sample of same size as the actual event dates
-        placebo_event_dates = future_map(candidate_dates, \(date_df) {
-          date_df |>
-            # Random sample without replacement
-            slice_sample(n=num_events) |>
-            # Assign event_id
-            arrange(date) |>
-            rowid_to_column() |>
-            rename(event_id = rowid, event_date = date)        
-        },
-          .options = furrr_options(seed = TRUE)
-        )
-      )
-  }) |> 
-  bind_rows(.id="rep_id") |> 
-  mutate(rep_id = as.integer(rep_id))  
-
-# Clean up when done
-plan(sequential)
-end = Sys.time()
-
-cat("Duration:", end - start, "\n")
-
-```
-
-End time: `r end` Duration: `r end - start`
-
-**Step 2** Generate the Event Window Data in Parallel
-
-Start time: `r  Sys.time()`
-
-```{r}
-#| label: generate-placebo-plot_data-parallel
-library(furrr)
-
-symbol_dt = dt |> ungroup() |> 
-  nest(.by = symbol, dt = everything())
-
-# Set up parallel processing
-start = Sys.time()
-plan(multisession, workers = availableCores() - 1)  # Leave one core free
-
-placebo_replicates = placebo_dates |> ungroup() |> 
-  select(-candidate_dates) |> 
-  inner_join(symbol_dt) |> 
-  mutate(
-        plot_data = future_map2(placebo_event_dates, dt, \(event_dates, dt) {
-          result = process_one_events_set(event_dates, WINDOW_LENGTH, dt)
-          return(result[[2]])
-        }, 
-          .options = furrr_options(seed = TRUE),
-          .progress = TRUE
-        )
-  )
-
-# Clean up when done
-plan(sequential)
-end = Sys.time()
-
-cat("Duration:", end - start, "\n")
-```
-
-End time: `r end` Duration: `r end - start`
-
-**Step 2** Generate the Event Window Data Sequentially
-
-Start time: `r  Sys.time()`
-
-```{r}
-#| label: generate-placebo-plot_data-sequential
-
-symbol_dt = dt |> ungroup() |> 
-  nest(.by = symbol, dt = everything())
-
-# Set up parallel processing
-start = Sys.time()
-
-placebo_replicates = placebo_dates |> ungroup() |> 
-  # Remove the heavy column containing the candidate dates that we are not using
-  select(-candidate_dates) |> 
-  # add the dt column of the prices by date
-  inner_join(symbol_dt) |> 
-  # For each symbol, rep_id, process the event window (1 symbol for each dt)
-  mutate(
-        plot_data = map2(placebo_event_dates, dt, \(event_dates, dt) {
-          result = process_one_events_set(event_dates, WINDOW_LENGTH, dt)
-          return(result[[2]])
-        })
-  ) |> 
-  ungroup()
-
-end = Sys.time()
-
-cat("Duration:", end - start, "\n")
-```
-
-End time: `r end` Duration: `r end - start`
 
 #### Summary
 
@@ -397,3 +283,4 @@ placebo_data |>
 write_rds(placebo_replicates, here("data/processed/placebo_long_window.rds"))
 write_rds(placebo_data, here("data/processed/placebo_long_window_plot_data.rds"))
 ```
+
