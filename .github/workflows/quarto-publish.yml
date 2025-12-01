@@ -9,9 +9,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      
       - uses: quarto-dev/quarto-actions/setup@v2
+      
+      # Specify the correct path to your Quarto project
       - uses: quarto-dev/quarto-actions/render@v2
+        with:
+          path: ./my-blog/  # Change this to your Quarto project directory
+      
       - uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./_site
+          publish_dir: ./my-blog/_site  # Adjust path accordingly
