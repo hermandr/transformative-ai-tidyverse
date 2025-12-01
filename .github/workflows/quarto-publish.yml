@@ -15,12 +15,76 @@ jobs:
           r-version: '4.3'
       
       # Install Quarto dependencies
+      # Install system dependencies for R packages
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libcurl4-openssl-dev libssl-dev
+          sudo apt-get install -y \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libcurl4-openssl-dev \
+            libssl-dev \
+            libxml2-dev \
+            libharfbuzz-dev \
+            libfribidi-dev \
+            libtiff5-dev \
+            libjpeg-dev \
+            libpng-dev
       
       # Install R packages needed for Quarto
+      - name: Install R packages
+        run: |
+          install.packages(c("rmarkdown", "knitr", "tidyverse"))
+        shell: Rscript {0}
+      
+      - uses: quarto-dev/quarto-actions/setup@v2
+      
+      - uses: quarto-dev/quarto-actions/render@v2
+        with:
+          path: ./my-blog/
+      
+      - uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./my-blog/_site
+
+
+
+name: Quarto Publish
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      # Install system dependencies for R packages
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libcurl4-openssl-dev \
+            libssl-dev \
+            libxml2-dev \
+            libharfbuzz-dev \
+            libfribidi-dev \
+            libtiff5-dev \
+            libjpeg-dev \
+            libpng-dev
+      
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.3'
+      
+      - uses: r-lib/actions/setup-renv@v2
+      
+      # Now install R packages (systemfonts will build successfully)
       - name: Install R packages
         run: |
           install.packages(c("rmarkdown", "knitr", "tidyverse"))
