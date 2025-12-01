@@ -141,6 +141,7 @@ long_window_plot_data = dt_long_window[[2]]
 
 long_window_plot_data |> slice_sample(n=5) |> kable()
 ```
+
 ```{r}
 #| label: save-actual-events-long-window
 write_csv(dt_long_price_change, here("data/processed/actual_event_long_window.csv"))

@@ -11,6 +11,7 @@ execute:
 ---
 
 ```{r}
+#| label: setup
 source(here::here("_common.R"))
 library(tidyquant)
 ```
@@ -18,6 +19,7 @@ library(tidyquant)
 ## AI Events
 
 ```{r}
+#| label: define-ai-events
 # AI event dates from Table 1 in paper
 ai_events_2023 <- tribble(
   ~date, ~company, ~model, ~notes,
@@ -56,6 +58,7 @@ kable(ai_events)
 ```
 
 ```{r}
+#| label: save-ai-events
 write_csv(ai_events, here("data/raw/ai_events_raw.csv"))
 cat("\nRaw data saved to: data/raw/ai_events_raw.csv\n")
 ```
@@ -67,6 +70,7 @@ cat("\nRaw data saved to: data/raw/ai_events_raw.csv\n")
 #### Define date range
 
 ```{r}
+#| label: define-date-range
 start_date <- "2023-01-01"
 end_date <- "2025-01-31"
 ```
@@ -76,6 +80,7 @@ Start Date: `r start_date` End Date: `r end_date`
 #### Treasury and TIPS symbols from FRED
 
 ```{r}
+#| label: define-bond-symbols
 TREASURY_SYMBOLS <- c("DGS1", "DGS5", "DGS10", "DGS20", "DGS30")
 TIPS_SYMBOLS <- c("DFII5", "DFII10", "DFII20", "DFII30")
 bond_metadata <- tibble(
@@ -98,12 +103,14 @@ bond_metadata <- tibble(
 ```
 
 ```{r}
+#| label: display-bond-metadata
 kable(bond_metadata)
 ```
 
 #### Retrieve bond yield data from FRED
 
 ```{r}
+#| label: fetch-bond-data
 bond_data <- tq_get(
   bond_metadata$symbol,
   get = "economic.data",
@@ -122,29 +129,31 @@ Data retrieval completed successfully!
 
 ### Check data quality
 
-```{r}
 
-cat("Data retrieval summary:\n")
-cat("- Total observations:", nrow(bond_data), "\n")
-cat("- Date range:", min(bond_data$date, na.rm = TRUE), "to", max(bond_data$date, na.rm = TRUE), "\n")
-cat("- Symbols retrieved:", length(unique(bond_data$symbol)), "\n")
-cat("- Observations with no data:", bond_data |> filter(is.na(price)) |> nrow() )
+Data retrieval summary:
+- Total observations: `r nrow(bond_data)`
+- Date range: `r min(bond_data$date, na.rm = TRUE)` to `r max(bond_data$date, na.rm = TRUE)`
+- Symbols retrieved: `r length(unique(bond_data$symbol))`
+- Observations with no data: `r bond_data |> filter(is.na(price)) |> nrow()`
 
-```
 
 #### Remove NULLS
 
 ```{r}
+#| label: remove-missing-values
+
 bond_data_clean = bond_data |> filter(!is.na(price))
 
-cat("After cleaning:")
-cat("- Observations with no data:", bond_data_clean |> filter(is.na(price)) |> nrow() )
-
 ```
+
+After cleaning:
+- Observations with no data: `r bond_data_clean |> filter(is.na(price)) |> nrow()`
 
 #### Check for missing values by symbol
 
 ```{r}
+#| label: check-missing-by-symbol
+
 missing_summary <- bond_data_clean %>%
   group_by(symbol) %>%
   summarise(
@@ -161,12 +170,16 @@ kable(missing_summary)
 ### Save raw data
 
 ```{r}
+#| label: save-bond-metadata
+
 write_csv(bond_metadata, here("data/raw/bond_metadata.csv"))
 cat("\nBond metadata saved to: data/raw/bond_metadata.csv\n")
 
 ```
 
 ```{r}
+#| label: save-bond-yields-raw
+
 write_csv(bond_data_clean, here("data/raw/bond_yields_raw.csv"))
 cat("\nRaw data saved to: data/raw/bond_yields_raw.csv\n")
 
@@ -175,6 +188,7 @@ cat("\nRaw data saved to: data/raw/bond_yields_raw.csv\n")
 ### Create summary statistics
 
 ```{r}
+#| label: create-summary-statistics
 
 data_summary <- bond_data_clean %>%
   group_by(symbol) %>%
@@ -195,10 +209,9 @@ kable(data_summary)
 #### Save summary data
 
 ```{r}
+#| label: save-summary-statistics
 
 write_csv(data_summary, here("data/raw/bond_yields_summary.csv"))
 cat("Summary statistics saved to: data/raw/bond_yields_summary.csv\n")
 
 ```
-
-##

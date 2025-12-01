@@ -11,20 +11,20 @@ execute:
 ---
 
 ```{r}
+#| label: setup
 source(here::here("_common.R"))
+
 ```
 
 ```{r}
+#| label: load-data
 actual_data = read_csv(here("data/processed/actual_event_long_window.csv"))
 placebo_data = read_rds(here("data/processed/placebo_long_window_plot_data.rds"))
 bond_metadata = read_csv(here("data/raw/bond_metadata.csv"))
 ```
 
 ```{r}
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-
+#| label: define plot-aesthetics
 # Define colors (three shades of gray, solid black for median)
 metric_colors <- c(
   "placebo_mean"     = "black",
@@ -53,6 +53,7 @@ metric_linetypes <- c(
 ```
 
 ```{r}
+#| label: calc-placebo-percentiles
 placebo_symbol_index = placebo_data |> 
     group_by(symbol, window_index) |> 
     summarize(
@@ -68,6 +69,7 @@ placebo_symbol_index = placebo_data |>
 ```
 
 ```{r}
+#| label: calc-actual-medians
 actual_data = read_csv(here("data/processed/actual_event_long_window.csv"))
 
 actual_symbol_index = actual_data |> 
@@ -81,11 +83,13 @@ actual_symbol_index = actual_data |>
 ## Plot Median Price Changes
 
 ```{r}
+#| label: join-actual-placebo
 plot_data = placebo_symbol_index |> 
     inner_join(actual_symbol_index)
 ```
 
 ```{r}
+#| label: prep-median-plot-data
 plot_data_prep = plot_data |> 
     inner_join(bond_metadata) |> 
     pivot_longer(
@@ -99,12 +103,14 @@ plot_data_prep = plot_data |>
 ```
 
 ```{r}
+#| label: save-median-plot-data
 write_csv(plot_data, here("data/processed/actual_placebo_median_price_changes_plot_long_window.csv"))
 ```
 
 ### Treasuries
 
 ```{r}
+#| label: plot-median-treasuries
 plot_data_prep |> 
     filter(data_group == "Treasury") |> 
     ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +
@@ -126,6 +132,7 @@ plot_data_prep |>
 ### TIPS
 
 ```{r}
+#| label: plot-median-tips
 plot_data_prep |> 
     filter(data_group == "TIPS") |> 
     ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +
@@ -147,6 +154,7 @@ plot_data_prep |>
 ## Plot Median Absolute Price Changes
 
 ```{r}
+#| label: calc-placebo-abs-percentiles
 placebo_symbol_index_abs = placebo_data |> 
     group_by(symbol, window_index) |> 
     summarize(
@@ -162,7 +170,7 @@ placebo_symbol_index_abs = placebo_data |>
 ```
 
 ```{r}
-
+#| label: calc-actual-abs-medians
 actual_symbol_index_abs = actual_data |> 
     group_by(symbol, window_index) |> 
     summarize(
@@ -172,15 +180,18 @@ actual_symbol_index_abs = actual_data |>
 ```
 
 ```{r}
+#| label: join-actual-placebo-abs
 plot_data = placebo_symbol_index_abs |> 
     inner_join(actual_symbol_index_abs)
 ```
 
 ```{r}
+#| label: save-abs-plot-data
 write_csv(plot_data, here("data/processed/actual_placebo_median_abs_price_changes_plot_long_window.csv"))
 ```
 
 ```{r}
+#| label: prep-abs-plot-data
 plot_data_prep = plot_data |> 
     inner_join(bond_metadata) |> 
     pivot_longer(
@@ -196,6 +207,7 @@ plot_data_prep = plot_data |>
 ### Treasuries
 
 ```{r}
+#| label: plot-abs-treasuries
 plot_data_prep |> 
     filter(data_group == "Treasury") |> 
     ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +
@@ -217,6 +229,7 @@ plot_data_prep |>
 ### TIPS
 
 ```{r}
+#| label: plot-abs-tips
 plot_data_prep |> 
     filter(data_group == "TIPS") |> 
     ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +
