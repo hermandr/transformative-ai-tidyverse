@@ -261,7 +261,7 @@ End time: r end Duration: r end - start
 ```{r}
 placebo_data = placebo_replicates |> 
   ungroup() |> 
-  select(-placebo_event_dates, -dt, -symbol) |> 
+  select(-placebo_event_dates, -symbol) |> 
   unnest(plot_data)
 ```
 
@@ -283,4 +283,3 @@ placebo_data |>
 write_rds(placebo_replicates, here("data/processed/placebo_long_window.rds"))
 write_rds(placebo_data, here("data/processed/placebo_long_window_plot_data.rds"))
 ```
-

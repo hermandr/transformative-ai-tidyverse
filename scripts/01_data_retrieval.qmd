@@ -47,10 +47,26 @@ ai_events_2024 <- tribble(
   "2024-12-26", "DeepSeek", "DeepSeek V3", "Latest DeepSeek"
 )
 
+ai_events_2025 <- tribble(
+  ~date, ~company, ~model, ~notes,
+  "2025-01-20", "DeepSeek", "DeepSeek R1", "New low-cost training yielding almost on-par performance.  Open-weights and MIT-licensed",
+  "2025-02-19", "xAI", "Grok 3", "Improved benchmark scores",
+  "2025-02-24", "Anthropic", "Claude 3.7 Sonnet", "Improved reasoning model",
+  "2025-02-28", "OpenAI", "ChatGPT-4.5", "Improved factual, instruction-following and emotional inteeligence",
+  "2025-03-25", "Google", "Gemini 2.5 Pro", "Native thinking, long context ranked Number 1",
+  "2025-04-16", "OpenAI", "o3 o4-mini", "SOTA on coding and science benchmarks",
+  "2025-05-22", "Anthropic", "Calude 4 Opus 4 Sonnet 4", "Best coding model",
+
+  "2025-08-06", "OpenAI", "ChatGPT-5", "thinking vs answer quickly SOTA Math, coding, multimodaL",
+  "2025-11-17", "Google", "Gemini 3 Pro & DeepThink", "SOTA Humanity's Last Exam",
+  "2025-11-24", "Anthropic", "Claude Opus 4.5", "Coding and Computer Use"
+)
+
 # Combine all AI events
 ai_events <- bind_rows(
   ai_events_2023 %>% mutate(year = 2023),
-  ai_events_2024 %>% mutate(year = 2024)
+  ai_events_2024 %>% mutate(year = 2024),
+  ai_events_2025 %>% mutate(year = 2025)
 ) %>%
   mutate(date = as.Date(date))
 

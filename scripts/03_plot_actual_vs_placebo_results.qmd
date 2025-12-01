@@ -1,8 +1,26 @@
 ---
-title: "Plot Placebo VS Actual"
+title: "Do Markets Believe in Transformative AI?"
 author: "Herman Tan"
 date: today
-format: html
+format:
+  html:
+    theme: cosmo
+    highlight-style: github
+    toc: true
+    toc-location: left
+    toc-depth: 3
+    number-sections: true
+    number-depth: 2
+    code-fold: show
+    code-summary: "Show code"
+    code-overflow: wrap
+    fig-width: 10
+    fig-height: 6
+    fig-dpi: 300
+    df-print: paged
+    smooth-scroll: true
+    embed-resources: true
+
 editor: visual
 execute:
   warning: false
@@ -27,40 +45,34 @@ This study investigates whether economic actors take seriously the possibility o
 
 Economic theory predicts that transformative technologies influence interest rates through multiple channels:
 
-- **Growth expectations:** If agents expect AI to dramatically accelerate economic growth, they anticipate being richer in the future, reducing the marginal value of future consumption and thus raising real interest rates.
-- **Existential risk (doom):** Concerns about AI-related existential risks increase discount rates due to lower survival probabilities.
-- **Post-scarcity scenarios (bliss):** Beliefs in rapid AI-driven abundance mirror doom's effects on asset pricing by reducing the marginal utility of consumption.
-- **Growth uncertainty:** Increased uncertainty about AI's economic impacts fuels precautionary saving and decreases real interest rates.
+-   **Growth expectations:** If agents expect AI to dramatically accelerate economic growth, they anticipate being richer in the future, reducing the marginal value of future consumption and thus raising real interest rates.
+-   **Existential risk (doom):** Concerns about AI-related existential risks increase discount rates due to lower survival probabilities.
+-   **Post-scarcity scenarios (bliss):** Beliefs in rapid AI-driven abundance mirror doom's effects on asset pricing by reducing the marginal utility of consumption.
+-   **Growth uncertainty:** Increased uncertainty about AI's economic impacts fuels precautionary saving and decreases real interest rates.
 
 ### Study Design
 
 **Event Study Approach:** This research employs a financial event study methodology, examining US bond yields around major AI model release dates.
 
-
 **AI Events:** The analysis focuses on 15 major model releases from five leading AI laboratories (OpenAI, Anthropic, Google DeepMind, xAI, and DeepSeek) during calendar years 2023 and 2024. These releases capture significant advancements in generative AI capabilities and provide forward-looking information about AI development timelines.
-
 
 **Key Assumption:** The identification strategy rests on the assumption that AI model release dates are effectively as good as random—driven by technical development timelines rather than financial market conditions. This supports a causal interpretation of yield movements around these dates.
 
-
 **Bond Yield Data:** The study examines three categories of fixed-income instruments:
 
-- **Nominal US Treasury Bonds:** Constant-maturity yields for 1, 5, 10, 20, and 30-year maturities
-- **TIPS (Treasury Inflation-Protected Securities):** Constant-maturity yields for 5, 10, 20, and 30-year maturities
-- **Corporate Bond Indices:** ICE BofA indices by maturity (1-3, 3-5, 5-7, 7-10, 10-15, and 15+ years)
-
+-   **Nominal US Treasury Bonds:** Constant-maturity yields for 1, 5, 10, 20, and 30-year maturities
+-   **TIPS (Treasury Inflation-Protected Securities):** Constant-maturity yields for 5, 10, 20, and 30-year maturities
+-   **Corporate Bond Indices:** ICE BofA indices by maturity (1-3, 3-5, 5-7, 7-10, 10-15, and 15+ years)
 
 **Event Windows:** Yield changes are measured relative to a 15-day pre-event baseline, capturing both information leakage (where models were made available to experts before official release) and direct announcement effects.
 
-
 **Statistical Inference:** Significance is assessed via permutation tests with 5,000 Monte Carlo simulations, drawing random placebo event dates uniformly from the sample period. This approach is robust to small sample sizes and tests whether observed yield changes exceed what would be expected under the null hypothesis of no market reaction to AI news.
-
 
 **Interpretation Framework:** Empirical results are interpreted through a consumption-based asset pricing model (representative agent with CRRA utility). The model predicts that:
 
-- Changes in growth expectations cause level shifts in forward yield curves
-- Changes in extreme outcome probabilities (doom/bliss) also produce level shifts
-- Changes in growth uncertainty would generate slope changes in forward curves
+-   Changes in growth expectations cause level shifts in forward yield curves
+-   Changes in extreme outcome probabilities (doom/bliss) also produce level shifts
+-   Changes in growth uncertainty would generate slope changes in forward curves
 
 ```{r}
 #| label: load-data
@@ -157,8 +169,6 @@ write_csv(plot_data, here("data/processed/actual_placebo_median_price_changes_pl
 
 ```{r}
 #| label: plot-median-treasuries
-#| fig-width: 10
-#| fig-height: 6
 plot_data_prep |> 
     filter(data_group == "Treasury") |> 
     ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +
@@ -181,8 +191,6 @@ plot_data_prep |>
 
 ```{r}
 #| label: plot-median-tips
-#| fig-width: 10
-#| fig-height: 6
 plot_data_prep |> 
     filter(data_group == "TIPS") |> 
     ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +
@@ -270,8 +278,6 @@ plot_data_prep = plot_data |>
 
 ```{r}
 #| label: plot-abs-treasuries
-#| fig-width: 10
-#| fig-height: 6
 plot_data_prep |> 
     filter(data_group == "Treasury") |> 
     ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +
@@ -294,8 +300,6 @@ plot_data_prep |>
 
 ```{r}
 #| label: plot-abs-tips
-#| fig-width: 10
-#| fig-height: 6
 plot_data_prep |> 
     filter(data_group == "TIPS") |> 
     ggplot(aes(x = window_index, y = value_bps, color = metric, linetype = metric, group = metric)) +

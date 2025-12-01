@@ -43,16 +43,10 @@ library(stringr)
 
 # Project-specific settings
 PROJECT_START_DATE <- as.Date("2023-01-01")
-PROJECT_END_DATE <- as.Date("2025-01-31")
+PROJECT_END_DATE <- as.Date("2025-11-30")
 N_PERMUTATIONS <- 5000
 EVENT_WINDOWS <- list(
   short = list(length = 5,  first = -5,  last = 5),
   long  = list(length = 15, first = -15, last = 15)
 )
 
-# Print project info
-cat("Transformative AI Replication Project\n")
-cat("=====================================\n")
-cat("Start Date:", as.character(PROJECT_START_DATE), "\n")
-cat("End Date:", as.character(PROJECT_END_DATE), "\n")
-cat("Permutations:", N_PERMUTATIONS, "\n")
