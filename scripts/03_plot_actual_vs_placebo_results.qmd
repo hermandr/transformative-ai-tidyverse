@@ -143,7 +143,6 @@ placebo_symbol_index = placebo_data |>
 
 ```{r}
 #| label: calc-actual-medians
-actual_data = read_csv(here("data/processed/actual_event_long_window.csv"))
 
 actual_symbol_index = actual_data |> 
     group_by(symbol, window_index) |> 
