@@ -38,7 +38,7 @@ jobs:
       # Install R packages needed for Quarto
       - name: Install R packages
         run: |
-          install.packages(c("rmarkdown", "knitr"))
+          install.packages(c("rmarkdown", "knitr", "here"))
         shell: Rscript {0}
       
       - uses: quarto-dev/quarto-actions/setup@v2
