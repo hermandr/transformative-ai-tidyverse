@@ -92,8 +92,8 @@ Economic theory predicts that transformative technologies influence interest rat
 ```{r}
 #| label: load-data
 actual_data = read_csv(here("data/processed/actual_event_long_window.csv"))
-actual_placebo_median_changes_plot_data = read_rds(here("data\processed\actual_placebo_median_price_changes_plot_long_window.csv"))
-actual_placebo_abs_median_changes_plot_data = read_rds(here("data\processed\actual_placebo_median_abs_price_changes_plot_long_window.csv"))
+actual_placebo_median_changes_plot_data = read_rds(here("data/processed/actual_placebo_median_price_changes_plot_long_window.csv"))
+actual_placebo_abs_median_changes_plot_data = read_rds(here("data/processed/actual_placebo_median_abs_price_changes_plot_long_window.csv"))
 bond_metadata = read_csv(here("data/raw/bond_metadata.csv"))
 ```
 
