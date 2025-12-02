@@ -92,7 +92,8 @@ Economic theory predicts that transformative technologies influence interest rat
 ```{r}
 #| label: load-data
 actual_data = read_csv(here("data/processed/actual_event_long_window.csv"))
-placebo_data = read_rds(here("data/processed/placebo_long_window_plot_data.rds"))
+actual_placebo_median_changes_plot_data = read_rds(here("data\processed\actual_placebo_median_price_changes_plot_long_window.csv"))
+actual_placebo_abs_median_changes_plot_data = read_rds(here("data\processed\actual_placebo_median_abs_price_changes_plot_long_window.csv"))
 bond_metadata = read_csv(here("data/raw/bond_metadata.csv"))
 ```
 
@@ -141,24 +142,13 @@ placebo_symbol_index = placebo_data |>
     )
 ```
 
-```{r}
-#| label: calc-actual-medians
-actual_data = read_csv(here("data/processed/actual_event_long_window.csv"))
 
-actual_symbol_index = actual_data |> 
-    group_by(symbol, window_index) |> 
-    summarize(
-        actual_median_price_change = median(price_change)
-    )
-
-```
 
 ## Plot Median Yield Changes
 
 ```{r}
 #| label: join-actual-placebo
-plot_data = placebo_symbol_index |> 
-    inner_join(actual_symbol_index)
+plot_data = actual_placebo_median_changes_plot_data
 ```
 
 ```{r}
@@ -175,10 +165,6 @@ plot_data_prep = plot_data |>
     )  
 ```
 
-```{r}
-#| label: save-median-plot-data
-write_csv(plot_data, here("data/processed/actual_placebo_median_price_changes_plot_long_window.csv"))
-```
 
 ### Treasuries
 
@@ -269,26 +255,13 @@ placebo_symbol_index_abs = placebo_data |>
     )
 ```
 
-```{r}
-#| label: calc-actual-abs-medians
-actual_symbol_index_abs = actual_data |> 
-    group_by(symbol, window_index) |> 
-    summarize(
-        actual_median_abs_price_change = median(abs(price_change))
-    )
 
-```
 
 ```{r}
 #| label: join-actual-placebo-abs
-plot_data = placebo_symbol_index_abs |> 
-    inner_join(actual_symbol_index_abs)
+plot_data = actual_placebo_abs_median_changes_plot_data
 ```
 
-```{r}
-#| label: save-abs-plot-data
-write_csv(plot_data, here("data/processed/actual_placebo_median_abs_price_changes_plot_long_window.csv"))
-```
 
 ```{r}
 #| label: prep-abs-plot-data
