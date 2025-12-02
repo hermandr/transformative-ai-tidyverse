@@ -1,0 +1,10 @@
+symbol,description,data_group,maturity
+DGS1,"Market Yield on U.S. Treasury Securities at 1-Year Constant Maturity, Quoted on an Investment Basis (Nominal)",Treasury,1
+DGS5,"Market Yield on U.S. Treasury Securities at 5-Year Constant Maturity, Quoted on an Investment Basis (Nominal)",Treasury,5
+DGS10,"Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity, Quoted on an Investment Basis (Nominal)",Treasury,10
+DGS20,"Market Yield on U.S. Treasury Securities at 20-Year Constant Maturity, Quoted on an Investment Basis (Nominal)",Treasury,20
+DGS30,"Market Yield on U.S. Treasury Securities at 30-Year Constant Maturity, Quoted on an Investment Basis (Nominal)",Treasury,30
+DFII5,"Market Yield on U.S. Treasury Securities at 5-Year Constant Maturity, Quoted on an Investment Basis, Inflation-Indexed (TIPS yield)",TIPS,5
+DFII10,"Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity, Quoted on an Investment Basis, Inflation-Indexed (TIPS yield)",TIPS,10
+DFII20,"Market Yield on U.S. Treasury Securities at 20-Year Constant Maturity, Quoted on an Investment Basis, Inflation-Indexed (TIPS yield)",TIPS,20
+DFII30,"Market Yield on U.S. Treasury Securities at 30-Year Constant Maturity, Quoted on an Investment Basis, Inflation-Indexed (TIPS yield)",TIPS,30

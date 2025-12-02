@@ -31,7 +31,7 @@ execute:
 ```{r}
 #| label: setup
 #| echo: false
-source(here::here("_common.R"))
+source(here::here("posts/2025-12-01-my-post/_common.R"))
 
 # knitr settings
 knitr::opts_chunk$set(
@@ -142,8 +142,6 @@ placebo_symbol_index = placebo_data |>
     )
 ```
 
-
-
 ## Plot Median Yield Changes
 
 ```{r}
@@ -164,7 +162,6 @@ plot_data_prep = plot_data |>
         value_bps = value*100
     )  
 ```
-
 
 ### Treasuries
 
@@ -255,13 +252,10 @@ placebo_symbol_index_abs = placebo_data |>
     )
 ```
 
-
-
 ```{r}
 #| label: join-actual-placebo-abs
 plot_data = actual_placebo_abs_median_changes_plot_data
 ```
-
 
 ```{r}
 #| label: prep-abs-plot-data
