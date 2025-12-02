@@ -4,9 +4,15 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: write
+  
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
+    container:
+      image: rocker/tidyverse:4.5.1
+      
     steps:
       - uses: actions/checkout@v3
       
@@ -34,7 +40,7 @@ jobs:
       # Install R packages needed for Quarto
       - name: Install R packages
         run: |
-          install.packages(c("rmarkdown", "knitr", "tidyverse"))
+          install.packages(c("rmarkdown", "knitr"))
         shell: Rscript {0}
       
       - uses: quarto-dev/quarto-actions/setup@v2
