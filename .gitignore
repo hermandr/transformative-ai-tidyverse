@@ -6,5 +6,3 @@
 *_cache/
 *.html
 cache/
-*.rds 
-*.csv
