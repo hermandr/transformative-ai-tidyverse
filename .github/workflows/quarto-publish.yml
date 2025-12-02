@@ -35,7 +35,9 @@ jobs:
             libfribidi-dev \
             libtiff5-dev \
             libjpeg-dev \
-            libpng-dev
+            libpng-dev \
+            curl \
+            jq
       
       # Install R packages needed for Quarto
       - name: Install R packages
